@@ -8,15 +8,33 @@ function getData(key) {
     return data ? JSON.parse(data) : null;
 }
 
+// Check if user is authenticated
+async function checkAuth() {
+    const { data: { user } } = await supabase.auth.getUser();
+    return user;
+}
+
 // Initialize page based on current location
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', async function() {
     const currentPage = window.location.pathname.split('/').pop();
     
     if (currentPage === 'index.html' || currentPage === '') {
         initLoginPage();
     } else if (currentPage === 'form.html') {
+        // Check if user is logged in
+        const user = await checkAuth();
+        if (!user) {
+            window.location.href = 'index.html';
+            return;
+        }
         initFormPage();
     } else if (currentPage === 'story.html') {
+        // Check if user is logged in
+        const user = await checkAuth();
+        if (!user) {
+            window.location.href = 'index.html';
+            return;
+        }
         initStoryPage();
     }
 });
@@ -67,26 +85,41 @@ function initLoginPage() {
     }
 }
 
-function handleLogin(e) {
+async function handleLogin(e) {
     e.preventDefault();
     const formData = new FormData(e.target);
-    const userData = {
-        email: formData.get('email'),
-        password: formData.get('password'),
-        timestamp: new Date().toISOString()
-    };
+    const email = formData.get('email');
+    const password = formData.get('password');
     
-    // Simple validation - in real app, this would authenticate with backend
-    saveData('user', userData);
-    hideLoginModal();
-    window.location.href = 'form.html';
+    try {
+        // Use Supabase authentication
+        const { data, error } = await supabase.auth.signInWithPassword({
+            email: email,
+            password: password
+        });
+        
+        if (error) {
+            alert('Fel vid inloggning: ' + error.message);
+            return;
+        }
+        
+        // Success! Hide modal and go to form
+        hideLoginModal();
+        window.location.href = 'form.html';
+        
+    } catch (error) {
+        alert('Ett fel uppstod: ' + error.message);
+    }
 }
 
-function handleSignup(e) {
+async function handleSignup(e) {
     e.preventDefault();
     const formData = new FormData(e.target);
     const password = formData.get('password');
     const confirmPassword = formData.get('confirmPassword');
+    const email = formData.get('email');
+    const firstName = formData.get('firstName');
+    const lastName = formData.get('lastName');
     
     // Validate password match
     if (password !== confirmPassword) {
@@ -94,18 +127,32 @@ function handleSignup(e) {
         return;
     }
     
-    const userData = {
-        firstName: formData.get('firstName'),
-        lastName: formData.get('lastName'),
-        email: formData.get('email'),
-        password: password,
-        timestamp: new Date().toISOString()
-    };
-    
-    // Save user data - in real app, this would create account on backend
-    saveData('user', userData);
-    hideSignupModal();
-    window.location.href = 'form.html';
+    try {
+        // Create user with Supabase
+        const { data, error } = await supabase.auth.signUp({
+            email: email,
+            password: password,
+            options: {
+                data: {
+                    first_name: firstName,
+                    last_name: lastName
+                }
+            }
+        });
+        
+        if (error) {
+            alert('Fel vid registrering: ' + error.message);
+            return;
+        }
+        
+        // Success! 
+        alert('Konto skapat! Du kan nu logga in.');
+        hideSignupModal();
+        showLoginModal();
+        
+    } catch (error) {
+        alert('Ett fel uppstod: ' + error.message);
+    }
 }
 
 // Form page functionality
