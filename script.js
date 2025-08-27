@@ -23,6 +23,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // Modal functions
 function showLoginModal() {
+    document.getElementById('signupModal').style.display = 'none';
     document.getElementById('loginModal').style.display = 'block';
 }
 
@@ -30,19 +31,39 @@ function hideLoginModal() {
     document.getElementById('loginModal').style.display = 'none';
 }
 
+function showSignupModal() {
+    document.getElementById('loginModal').style.display = 'none';
+    document.getElementById('signupModal').style.display = 'block';
+}
+
+function hideSignupModal() {
+    document.getElementById('signupModal').style.display = 'none';
+}
+
 // Close modal when clicking outside of it
 window.onclick = function(event) {
-    const modal = document.getElementById('loginModal');
-    if (event.target == modal) {
-        modal.style.display = 'none';
+    const loginModal = document.getElementById('loginModal');
+    const signupModal = document.getElementById('signupModal');
+    
+    if (event.target == loginModal) {
+        loginModal.style.display = 'none';
+    }
+    if (event.target == signupModal) {
+        signupModal.style.display = 'none';
     }
 }
 
 // Login page functionality
 function initLoginPage() {
     const loginForm = document.getElementById('loginForm');
+    const signupForm = document.getElementById('signupForm');
+    
     if (loginForm) {
         loginForm.addEventListener('submit', handleLogin);
+    }
+    
+    if (signupForm) {
+        signupForm.addEventListener('submit', handleSignup);
     }
 }
 
@@ -51,11 +72,39 @@ function handleLogin(e) {
     const formData = new FormData(e.target);
     const userData = {
         email: formData.get('email'),
-        name: formData.get('name'),
+        password: formData.get('password'),
         timestamp: new Date().toISOString()
     };
     
+    // Simple validation - in real app, this would authenticate with backend
     saveData('user', userData);
+    hideLoginModal();
+    window.location.href = 'form.html';
+}
+
+function handleSignup(e) {
+    e.preventDefault();
+    const formData = new FormData(e.target);
+    const password = formData.get('password');
+    const confirmPassword = formData.get('confirmPassword');
+    
+    // Validate password match
+    if (password !== confirmPassword) {
+        alert('Lösenorden matchar inte. Försök igen.');
+        return;
+    }
+    
+    const userData = {
+        firstName: formData.get('firstName'),
+        lastName: formData.get('lastName'),
+        email: formData.get('email'),
+        password: password,
+        timestamp: new Date().toISOString()
+    };
+    
+    // Save user data - in real app, this would create account on backend
+    saveData('user', userData);
+    hideSignupModal();
     window.location.href = 'form.html';
 }
 

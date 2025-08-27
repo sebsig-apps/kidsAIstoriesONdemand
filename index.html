@@ -21,7 +21,7 @@
         <section class="hero">
             <h1>Magiska berättelser för ditt barn</h1>
             <p class="tagline">Vi skapar personliga AI-genererade berättelser som gör ditt barn till huvudpersonen</p>
-            <button class="primary-button" onclick="showLoginModal()" style="max-width: 300px; margin: 2rem auto 0;">Kom igång</button>
+            <button class="primary-button" onclick="showSignupModal()" style="max-width: 300px; margin: 2rem auto 0;">Kom igång</button>
         </section>
 
         <main class="main-content">
@@ -42,17 +42,56 @@
             <div class="modal-content">
                 <span class="close" onclick="hideLoginModal()">&times;</span>
                 <div class="login-form">
-                    <h3>Kom igång</h3>
+                    <h3>Logga in</h3>
                     <form id="loginForm">
                         <div class="form-group">
-                            <label for="email">E-post</label>
-                            <input type="email" id="email" name="email" required>
+                            <label for="loginEmail">E-post</label>
+                            <input type="email" id="loginEmail" name="email" required>
                         </div>
                         <div class="form-group">
-                            <label for="name">Ditt namn</label>
-                            <input type="text" id="name" name="name" required>
+                            <label for="loginPassword">Lösenord</label>
+                            <input type="password" id="loginPassword" name="password" required>
                         </div>
-                        <button type="submit" class="primary-button">Skapa berättelse</button>
+                        <button type="submit" class="primary-button">Logga in</button>
+                        <p style="text-align: center; margin-top: 1rem; color: #6c757d;">
+                            Inget konto? <a href="#" onclick="showSignupModal()" style="color: var(--primary-color);">Skapa ett konto</a>
+                        </p>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Signup Modal -->
+        <div id="signupModal" class="modal" style="display: none;">
+            <div class="modal-content">
+                <span class="close" onclick="hideSignupModal()">&times;</span>
+                <div class="login-form">
+                    <h3>Skapa ett konto</h3>
+                    <form id="signupForm">
+                        <div class="form-group">
+                            <label for="firstName">Namn</label>
+                            <input type="text" id="firstName" name="firstName" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="lastName">Efternamn</label>
+                            <input type="text" id="lastName" name="lastName" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="signupEmail">Mejladress</label>
+                            <input type="email" id="signupEmail" name="email" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="signupPassword">Lösenord</label>
+                            <input type="password" id="signupPassword" name="password" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="confirmPassword">Upprepa lösenord</label>
+                            <input type="password" id="confirmPassword" name="confirmPassword" required>
+                        </div>
+                        <button type="submit" class="primary-button">Skapa konto</button>
+                        <p style="text-align: center; margin-top: 1rem; color: #6c757d;">
+                            Har redan ett konto? <a href="#" onclick="showLoginModal()" style="color: var(--primary-color);">Logga in</a>
+                        </p>
                     </form>
                 </div>
             </div>
