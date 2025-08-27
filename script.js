@@ -14,6 +14,26 @@ async function checkAuth() {
     return user;
 }
 
+// Logout function
+async function logout() {
+    try {
+        const { error } = await supabase.auth.signOut();
+        if (error) {
+            alert('Fel vid utloggning: ' + error.message);
+            return;
+        }
+        
+        // Clear any localStorage data
+        localStorage.clear();
+        
+        // Redirect to homepage
+        window.location.href = 'index.html';
+        
+    } catch (error) {
+        alert('Ett fel uppstod: ' + error.message);
+    }
+}
+
 // Initialize page based on current location
 document.addEventListener('DOMContentLoaded', async function() {
     const currentPage = window.location.pathname.split('/').pop();
