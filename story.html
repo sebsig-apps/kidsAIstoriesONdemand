@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sigvardsson Story App - Din berättelse</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <nav class="navbar">
+            <div class="logo-nav">
+                <h1>Sigvardsson Stories</h1>
+            </div>
+            <div class="login-nav">
+                <a href="index.html" class="login-button">Hem</a>
+            </div>
+        </nav>
+
+        <section class="header">
+            <h1>Din personliga berättelse</h1>
+            <p class="tagline">Magisk och unik, skapad för ditt barn</p>
+        </section>
+
+        <main class="main-content">
+            <div id="loadingSection" class="loading">
+                <div class="spinner"></div>
+                <h3>Skapar din berättelse...</h3>
+                <p>AI:n skriver en unik berättelse baserad på ditt barns detaljer. Detta tar bara några sekunder.</p>
+            </div>
+
+            <div id="storySection" class="story-form" style="display: none;">
+                <h3>Din berättelse är klar!</h3>
+                <p style="text-align: center; margin-bottom: 2rem;">Här är den personliga berättelsen för <span id="storyChildName"></span>:</p>
+                
+                <div class="story-preview" id="storyContent">
+                    <!-- Story content will be inserted here -->
+                </div>
+
+                <div class="button-group">
+                    <button type="button" class="back-button" onclick="createAnother()">Skapa en till</button>
+                    <button type="button" class="primary-button" onclick="printStory()">Skriv ut berättelse</button>
+                </div>
+            </div>
+
+            <div id="confirmSection" class="story-form" style="display: none;">
+                <h3>Redo att skapa berättelse?</h3>
+                <div class="summary" id="childSummary">
+                    <!-- Child details summary will be shown here -->
+                </div>
+                <p style="text-align: center; margin: 2rem 0; color: #6c757d;">
+                    Vi kommer att använda AI för att skapa en unik, personlig berättelse baserad på informationen ovan.
+                </p>
+                <div class="button-group">
+                    <button type="button" class="back-button" onclick="goToForm()">Ändra detaljer</button>
+                    <button type="button" class="primary-button" onclick="generateStory()">Ja, skapa berättelse!</button>
+                </div>
+            </div>
+        </main>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>

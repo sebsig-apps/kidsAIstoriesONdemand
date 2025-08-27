@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sigvardsson Story App</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <nav class="navbar">
+            <div class="logo-nav">
+                <h1>Sigvardsson Stories</h1>
+            </div>
+            <div class="login-nav">
+                <a href="#" class="login-button" onclick="showLoginModal()">Logga in</a>
+            </div>
+        </nav>
+
+        <section class="hero">
+            <h1>Magiska berättelser för ditt barn</h1>
+            <p class="tagline">Vi skapar personliga AI-genererade berättelser som gör ditt barn till huvudpersonen</p>
+            <button class="primary-button" onclick="showLoginModal()" style="max-width: 300px; margin: 2rem auto 0;">Kom igång</button>
+        </section>
+
+        <main class="main-content">
+            <div class="welcome-section">
+                <h2>Om oss</h2>
+                <p class="intro-text">
+                    Vi är ett svenskt par som ville ge andra föräldrars barn 
+                    möjligheten att få vackra, personliga berättelser att minnas för alltid.
+                </p>
+                <p class="intro-text">
+                    Varje berättelse skapas unikt baserat på ditt barns personlighet, favoriter och speciella minnen.
+                </p>
+            </div>
+        </main>
+
+        <!-- Login Modal -->
+        <div id="loginModal" class="modal" style="display: none;">
+            <div class="modal-content">
+                <span class="close" onclick="hideLoginModal()">&times;</span>
+                <div class="login-form">
+                    <h3>Kom igång</h3>
+                    <form id="loginForm">
+                        <div class="form-group">
+                            <label for="email">E-post</label>
+                            <input type="email" id="email" name="email" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="name">Ditt namn</label>
+                            <input type="text" id="name" name="name" required>
+                        </div>
+                        <button type="submit" class="primary-button">Skapa berättelse</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>
