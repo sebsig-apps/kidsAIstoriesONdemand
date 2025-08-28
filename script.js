@@ -243,8 +243,8 @@ function removeFile(fileIndex, fileInput) {
     fileInput.dispatchEvent(new Event('change'));
 }
 
-// Handle story form submission
-function handleStoryForm(e) {
+// Enhanced story form submission with real-time updates
+async function handleStoryForm(e) {
     e.preventDefault();
     const formData = new FormData(e.target);
     
@@ -257,31 +257,128 @@ function handleStoryForm(e) {
         alert('Vänligen ladda upp minst en teckning av ditt barn.');
         return;
     }
+
+    // Show loading state
+    showStoryGenerationProgress();
     
-    const childData = {
-        childName: formData.get('childName'),
-        childAge: formData.get('childAge'),
-        childHeight: formData.get('childHeight'),
-        favoriteFood: formData.get('favoriteFood'),
-        favoriteActivity: formData.get('favoriteActivity'),
-        bestMemory: formData.get('bestMemory'),
-        personality: formData.get('personality'),
-        drawings: uploadedFiles.map(file => ({
-            name: file.name,
-            size: file.size,
-            type: file.type,
-            lastModified: file.lastModified
-        }))
-    };
-    
-    // Store file metadata (actual files would be uploaded to server in production)
-    saveData('child', childData);
-    
-    // Store actual files in a separate key for this demo
-    saveFiles('drawings', uploadedFiles);
-    
-    hideStoryModal();
-    window.location.href = 'story.html';
+    try {
+        // Get current user session
+        const { data: { session } } = await supabase.auth.getSession();
+        
+        if (!session) {
+            alert('Du måste vara inloggad för att skapa berättelser.');
+            hideStoryGenerationProgress();
+            return;
+        }
+
+        // Prepare child data
+        const childData = {
+            childName: formData.get('childName'),
+            childAge: parseInt(formData.get('childAge')),
+            childHeight: formData.get('childHeight'),
+            favoriteFood: formData.get('favoriteFood'),
+            favoriteActivity: formData.get('favoriteActivity'),
+            bestMemory: formData.get('bestMemory'),
+            personality: formData.get('personality')
+        };
+
+        // Convert files to base64 for transmission
+        const drawingsData = await Promise.all(
+            uploadedFiles.map(async (file) => ({
+                name: file.name,
+                type: file.type,
+                size: file.size,
+                data: await fileToBase64(file)
+            }))
+        );
+
+        // Call Edge Function
+        const response = await supabase.functions.invoke('generate-story', {
+            body: {
+                childData,
+                drawings: drawingsData
+            }
+        });
+
+        if (response.error) {
+            throw new Error(response.error.message || 'Failed to start story generation');
+        }
+
+        const { storyId } = response.data;
+        
+        // Hide modal and show progress
+        hideStoryModal();
+        showStoryProgressPage(storyId);
+        
+        // Subscribe to real-time updates
+        subscribeToStoryUpdates(storyId);
+
+    } catch (error) {
+        console.error('Story generation error:', error);
+        alert('Ett fel uppstod vid skapande av berättelsen. Försök igen.');
+        hideStoryGenerationProgress();
+    }
+}
+
+// Convert file to base64
+async function fileToBase64(file) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = error => reject(error);
+    });
+}
+
+// Show story generation progress
+function showStoryGenerationProgress() {
+    console.log('Showing story generation progress...');
+}
+
+// Hide story generation progress
+function hideStoryGenerationProgress() {
+    console.log('Hiding story generation progress...');
+}
+
+// Show story progress page
+function showStoryProgressPage(storyId) {
+    const mainContent = document.querySelector('.main-content');
+    mainContent.innerHTML = `
+        <div class="story-progress-container">
+            <h2>Skapar din magiska berättelse...</h2>
+            <div class="progress-steps">
+                <div class="progress-step active" id="step-processing">
+                    <div class="step-icon">📝</div>
+                    <div class="step-text">Förbereder...</div>
+                </div>
+                <div class="progress-step" id="step-story">
+                    <div class="step-icon">✍️</div>
+                    <div class="step-text">Skapar berättelse</div>
+                </div>
+                <div class="progress-step" id="step-images">
+                    <div class="step-icon">🎨</div>
+                    <div class="step-text">Genererar bilder</div>
+                </div>
+                <div class="progress-step" id="step-complete">
+                    <div class="step-icon">✨</div>
+                    <div class="step-text">Klar!</div>
+                </div>
+            </div>
+            <div class="progress-message" id="progress-message">
+                Vi laddar upp dina teckningar och förbereder allt...
+            </div>
+            <div class="progress-spinner">
+                <div class="spinner"></div>
+            </div>
+            <p class="progress-note">Detta kan ta 2-5 minuter. Du kan stänga denna sida och komma tillbaka senare.</p>
+        </div>
+    `;
+}
+
+// Subscribe to real-time story updates
+function subscribeToStoryUpdates(storyId) {
+    console.log('Subscribing to story updates for:', storyId);
+    // This will be enhanced by story-generation.js if loaded
 }
 
 // Helper function to save files (for demonstration purposes)
