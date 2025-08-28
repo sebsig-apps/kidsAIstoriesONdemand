@@ -378,7 +378,170 @@ function showStoryProgressPage(storyId) {
 // Subscribe to real-time story updates
 function subscribeToStoryUpdates(storyId) {
     console.log('Subscribing to story updates for:', storyId);
-    // This will be enhanced by story-generation.js if loaded
+    
+    // Set up real-time subscription
+    const subscription = supabase
+        .channel('story-updates')
+        .on(
+            'postgres_changes',
+            {
+                event: 'UPDATE',
+                schema: 'public',
+                table: 'stories',
+                filter: `id=eq.${storyId}`
+            },
+            (payload) => {
+                console.log('Story update received:', payload.new);
+                updateProgressUI(payload.new);
+            }
+        )
+        .subscribe((status) => {
+            console.log('Subscription status:', status);
+            if (status === 'SUBSCRIBED') {
+                console.log('Successfully subscribed to story updates');
+            }
+        });
+
+    // Store subscription for cleanup
+    window.storySubscription = subscription;
+}
+
+// Update progress UI based on story status
+function updateProgressUI(story) {
+    const steps = {
+        'processing': { step: 'step-processing', message: 'Förbereder din berättelse...' },
+        'generating_story': { step: 'step-story', message: 'AI:n skriver din personliga berättelse...' },
+        'generating_images': { step: 'step-images', message: 'Skapar magiska bilder för berättelsen...' },
+        'completed': { step: 'step-complete', message: 'Din berättelse är klar!' },
+        'failed': { step: null, message: 'Ett fel uppstod. Försök igen.' }
+    };
+
+    const currentStep = steps[story.status];
+    
+    if (currentStep) {
+        // Update active step
+        document.querySelectorAll('.progress-step').forEach(step => {
+            step.classList.remove('active', 'completed');
+        });
+
+        if (story.status === 'completed') {
+            // Mark all steps as completed
+            document.querySelectorAll('.progress-step').forEach(step => {
+                step.classList.add('completed');
+            });
+            
+            // Show story after a moment
+            setTimeout(() => {
+                showCompletedStory(story);
+            }, 1500);
+            
+        } else if (story.status === 'failed') {
+            const progressMessage = document.getElementById('progress-message');
+            if (progressMessage) {
+                progressMessage.innerHTML = `
+                    <div style="color: #e74c3c; font-weight: bold;">${currentStep.message}</div>
+                    <div style="margin-top: 1rem; font-size: 0.9rem;">
+                        ${story.error_message || 'Ett oväntat fel uppstod.'}
+                    </div>
+                    <div style="margin-top: 1rem;">
+                        <button onclick="createNewStory()" class="primary-button">Försök igen</button>
+                    </div>
+                `;
+            }
+            
+        } else if (currentStep.step) {
+            const stepElement = document.getElementById(currentStep.step);
+            if (stepElement) {
+                stepElement.classList.add('active');
+                
+                // Mark previous steps as completed
+                const stepOrder = ['step-processing', 'step-story', 'step-images', 'step-complete'];
+                const currentIndex = stepOrder.indexOf(currentStep.step);
+                for (let i = 0; i < currentIndex; i++) {
+                    const prevStep = document.getElementById(stepOrder[i]);
+                    if (prevStep) {
+                        prevStep.classList.add('completed');
+                    }
+                }
+            }
+        }
+        
+        const progressMessage = document.getElementById('progress-message');
+        if (progressMessage && story.status !== 'failed') {
+            progressMessage.textContent = currentStep.message;
+        }
+    }
+}
+
+// Show completed story (placeholder for now)
+async function showCompletedStory(story) {
+    try {
+        console.log('Loading completed story:', story);
+        
+        // Fetch story images
+        const { data: images, error } = await supabase
+            .from('story_images')
+            .select('*')
+            .eq('story_id', story.id)
+            .order('page_number');
+
+        if (error) {
+            throw error;
+        }
+
+        // Unsubscribe from updates
+        if (window.storySubscription) {
+            window.storySubscription.unsubscribe();
+            window.storySubscription = null;
+        }
+
+        // Check if story-generation.js is loaded for enhanced display
+        if (typeof displayStoryBook === 'function') {
+            displayStoryBook(story, images);
+        } else {
+            // Simple fallback display
+            showSimpleStoryDisplay(story, images);
+        }
+
+    } catch (error) {
+        console.error('Error loading completed story:', error);
+        alert('Berättelsen är klar men det uppstod ett fel vid laddning. Ladda om sidan och försök igen.');
+    }
+}
+
+// Simple story display fallback
+function showSimpleStoryDisplay(story, images) {
+    const mainContent = document.querySelector('.main-content');
+    const storyData = story.story_data;
+    
+    let storyHTML = `
+        <div style="max-width: 800px; margin: 0 auto; background: white; padding: 2rem; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1);">
+            <h1 style="text-align: center; color: var(--primary-color); margin-bottom: 2rem;">${storyData.title}</h1>
+            <p style="text-align: center; font-style: italic; margin-bottom: 3rem;">En magisk berättelse för ${story.child_name}</p>
+    `;
+    
+    storyData.pages.forEach((page, index) => {
+        const pageImage = images.find(img => img.page_number === page.page);
+        const imageUrl = pageImage ? pageImage.image_url : '';
+        
+        storyHTML += `
+            <div style="margin-bottom: 3rem; padding: 2rem; background: #f8f9fa; border-radius: 8px;">
+                <div style="text-align: center; font-weight: bold; margin-bottom: 1rem;">Sida ${page.page}</div>
+                ${imageUrl ? `<div style="text-align: center; margin-bottom: 1rem;"><img src="${imageUrl}" style="max-width: 300px; border-radius: 8px;" alt="Sida ${page.page}"></div>` : ''}
+                <p style="font-size: 1.2rem; line-height: 1.6; text-align: center;">${page.text}</p>
+            </div>
+        `;
+    });
+    
+    storyHTML += `
+            <div style="text-align: center; margin-top: 2rem;">
+                <button onclick="window.print()" class="primary-button" style="margin-right: 1rem;">Skriv ut</button>
+                <button onclick="createNewStory()" class="primary-button">Skapa ny berättelse</button>
+            </div>
+        </div>
+    `;
+    
+    mainContent.innerHTML = storyHTML;
 }
 
 // Helper function to save files (for demonstration purposes)

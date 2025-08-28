@@ -15,6 +15,13 @@ interface ChildData {
   personality?: string
 }
 
+interface DrawingData {
+  name: string
+  type: string
+  size: number
+  data: string // base64 data
+}
+
 interface StoryPage {
   page: number
   text: string
@@ -67,7 +74,7 @@ serve(async (req) => {
     }
 
     // Parse request body
-    const { childData, drawings }: { childData: ChildData, drawings: File[] } = await req.json()
+    const { childData, drawings }: { childData: ChildData, drawings: DrawingData[] } = await req.json()
 
     // Validate required fields
     if (!childData.childName || !childData.childAge || !childData.favoriteFood || 
@@ -110,7 +117,9 @@ serve(async (req) => {
     }
 
     // Start async processing (don't wait for completion)
-    processStoryGeneration(story.id, childData, drawings, supabase)
+    processStoryGeneration(story.id, childData, drawings, supabase).catch(error => {
+      console.error('Async processing failed:', error)
+    })
 
     // Return immediately with story ID
     return new Response(
@@ -142,7 +151,7 @@ serve(async (req) => {
 async function processStoryGeneration(
   storyId: string, 
   childData: ChildData, 
-  drawings: File[], 
+  drawings: DrawingData[], 
   supabase: any
 ) {
   try {
@@ -184,28 +193,32 @@ async function processStoryGeneration(
     console.log(`Story generation completed for story ID: ${storyId}`)
 
   } catch (error) {
-    console.error(`Error processing story ${storyId}:`, error)
+    logError(`Story Processing ${storyId}`, error)
     
     // Mark as failed
-    await supabase
-      .from('stories')
-      .update({ 
-        status: 'failed',
-        error_message: error.message || 'Unknown error occurred'
-      })
-      .eq('id', storyId)
+    try {
+      await supabase
+        .from('stories')
+        .update({ 
+          status: 'failed',
+          error_message: error.message || 'Unknown error occurred'
+        })
+        .eq('id', storyId)
+    } catch (updateError) {
+      logError(`Failed to update story status ${storyId}`, updateError)
+    }
   }
 }
 
 // Upload drawings to Cloudinary
-async function uploadDrawingsToCloudinary(drawings: File[], storyId: string, supabase: any) {
+async function uploadDrawingsToCloudinary(drawings: DrawingData[], storyId: string, supabase: any) {
   const uploadedDrawings = []
   
   for (let i = 0; i < Math.min(drawings.length, 10); i++) { // Max 10 pages
     const drawing = drawings[i]
     
-    // Convert File to base64 for Cloudinary upload
-    const base64 = await fileToBase64(drawing)
+    // Use the base64 data directly
+    const base64 = drawing.data
     
     const uploadData = {
       file: base64,
@@ -332,14 +345,27 @@ Kom ihåg: Detta ska bli ${childData.childName}s alldeles egna magiska bok! 🎁
   const data = await response.json()
   
   if (!response.ok) {
+    logError('OpenAI API', data.error)
     throw new Error(`OpenAI API error: ${data.error?.message || 'Unknown error'}`)
   }
 
   try {
-    const storyContent = JSON.parse(data.choices[0].message.content)
+    const content = data.choices[0]?.message?.content
+    if (!content) {
+      throw new Error('No content received from OpenAI')
+    }
+    
+    const storyContent = JSON.parse(content)
+    
+    // Validate story structure
+    if (!storyContent.title || !storyContent.pages || !Array.isArray(storyContent.pages)) {
+      throw new Error('Invalid story structure from OpenAI')
+    }
+    
     return storyContent
   } catch (parseError) {
-    console.error('Failed to parse OpenAI response:', data.choices[0].message.content)
+    logError('OpenAI Response Parsing', parseError)
+    console.error('Raw OpenAI response:', data.choices[0]?.message?.content)
     throw new Error('Failed to parse story content from OpenAI')
   }
 }
@@ -384,7 +410,12 @@ Details: Include magical sparkles or gentle fantasy elements, avoid any scary or
       const imageData = await imageResponse.json()
       
       if (!imageResponse.ok) {
-        console.error(`DALL-E API error for page ${page.page}:`, imageData.error)
+        logError(`DALL-E API Page ${page.page}`, imageData.error)
+        continue
+      }
+
+      if (!imageData.data || !imageData.data[0] || !imageData.data[0].url) {
+        logError(`DALL-E Response Page ${page.page}`, 'No image URL in response')
         continue
       }
 
@@ -427,13 +458,10 @@ Details: Include magical sparkles or gentle fantasy elements, avoid any scary or
   }
 }
 
-// Helper function to convert File to base64
-async function fileToBase64(file: File): Promise<string> {
-  const arrayBuffer = await file.arrayBuffer()
-  const bytes = new Uint8Array(arrayBuffer)
-  let binary = ''
-  for (let i = 0; i < bytes.byteLength; i++) {
-    binary += String.fromCharCode(bytes[i])
+// Add better error handling and logging for debugging
+function logError(context: string, error: any) {
+  console.error(`[${context}] Error:`, error)
+  if (error.stack) {
+    console.error(`[${context}] Stack:`, error.stack)
   }
-  return 'data:' + file.type + ';base64,' + btoa(binary)
 }
