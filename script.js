@@ -82,6 +82,7 @@ function hideSignupModal() {
 window.onclick = function(event) {
     const loginModal = document.getElementById('loginModal');
     const signupModal = document.getElementById('signupModal');
+    const storyModal = document.getElementById('storyModal');
     
     if (event.target == loginModal) {
         loginModal.style.display = 'none';
@@ -89,10 +90,20 @@ window.onclick = function(event) {
     if (event.target == signupModal) {
         signupModal.style.display = 'none';
     }
+    if (event.target == storyModal) {
+        storyModal.style.display = 'none';
+    }
 }
 
 // Login page functionality
-function initLoginPage() {
+async function initLoginPage() {
+    // Check if user is already logged in
+    const user = await checkAuth();
+    if (user) {
+        showLoggedInView();
+        return;
+    }
+    
     const loginForm = document.getElementById('loginForm');
     const signupForm = document.getElementById('signupForm');
     
@@ -103,6 +114,61 @@ function initLoginPage() {
     if (signupForm) {
         signupForm.addEventListener('submit', handleSignup);
     }
+}
+
+// Show logged-in view
+function showLoggedInView() {
+    // Hide the public sections
+    document.querySelector('.hero').style.display = 'none';
+    document.querySelector('.welcome-section').style.display = 'none';
+    
+    // Update navigation
+    const loginNav = document.querySelector('.login-nav');
+    loginNav.innerHTML = '<a href="#" class="login-button" onclick="logout()">Logga ut</a>';
+    
+    // Show logged-in content
+    const mainContent = document.querySelector('.main-content');
+    mainContent.innerHTML = `
+        <div class="logged-in-welcome">
+            <h2>Välkommen till Magiska Berättelser!</h2>
+            <p class="welcome-text">
+                Här börjar magin! Ditt barns teckningar kommer att förvandlas till liv genom AI:s kraft. 
+                Vi skapar en kort bok som skrivs ut och berättas med hjälp av artificiell intelligens. 
+                Teckningarna blir del av en personlig berättelse som inkluderar ditt barns egna karaktärer och världar. 
+                Tillsammans med den information du väljer att dela med oss skapar vi något helt unikt för just ditt barn.
+            </p>
+            <button class="primary-button create-story-btn" onclick="showStoryModal()">Skapa en magisk berättelse</button>
+        </div>
+    `;
+}
+
+// Show story creation modal
+function showStoryModal() {
+    document.getElementById('storyModal').style.display = 'block';
+}
+
+// Hide story creation modal
+function hideStoryModal() {
+    document.getElementById('storyModal').style.display = 'none';
+}
+
+// Handle story form submission
+function handleStoryForm(e) {
+    e.preventDefault();
+    const formData = new FormData(e.target);
+    const childData = {
+        childName: formData.get('childName'),
+        childAge: formData.get('childAge'),
+        childHeight: formData.get('childHeight'),
+        favoriteFood: formData.get('favoriteFood'),
+        favoriteActivity: formData.get('favoriteActivity'),
+        bestMemory: formData.get('bestMemory'),
+        personality: formData.get('personality')
+    };
+    
+    saveData('child', childData);
+    hideStoryModal();
+    window.location.href = 'story.html';
 }
 
 async function handleLogin(e) {
@@ -123,9 +189,9 @@ async function handleLogin(e) {
             return;
         }
         
-        // Success! Hide modal and go to form
+        // Success! Hide modal and show logged-in view
         hideLoginModal();
-        window.location.href = 'form.html';
+        showLoggedInView();
         
     } catch (error) {
         alert('Ett fel uppstod: ' + error.message);
