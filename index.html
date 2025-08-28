@@ -108,7 +108,7 @@
                         Fyll i informationen nedan så skapar vi en personlig berättelse för ditt barn.
                     </p>
                     
-                    <form id="storyForm" onsubmit="handleStoryForm(event)">
+                    <form id="storyForm" onsubmit="handleStoryFormAsync(event)">
                         <div class="form-group">
                             <label for="childName">Barnets namn *</label>
                             <input type="text" id="childName" name="childName" required>
@@ -176,5 +176,7 @@
     </div>
     <script src="supabase-config.js"></script>
     <script src="script.js"></script>
+    <script src="story-generation.js"></script>
+    <link rel="stylesheet" href="story-styles.css">
 </body>
 </html>
