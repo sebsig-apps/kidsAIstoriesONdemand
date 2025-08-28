@@ -145,17 +145,119 @@ function showLoggedInView() {
 // Show story creation modal
 function showStoryModal() {
     document.getElementById('storyModal').style.display = 'block';
+    // Initialize file upload functionality
+    initFileUpload();
 }
 
 // Hide story creation modal
 function hideStoryModal() {
     document.getElementById('storyModal').style.display = 'none';
+    // Clear file preview when modal is closed
+    const filePreview = document.getElementById('file-preview');
+    if (filePreview) {
+        filePreview.innerHTML = '';
+    }
+}
+
+// Initialize file upload functionality
+function initFileUpload() {
+    const fileInput = document.getElementById('drawings');
+    if (fileInput) {
+        fileInput.addEventListener('change', handleFileSelection);
+    }
+}
+
+// Handle file selection and preview
+function handleFileSelection(event) {
+    const files = Array.from(event.target.files);
+    const filePreview = document.getElementById('file-preview');
+    
+    // Clear previous preview
+    filePreview.innerHTML = '';
+    
+    files.forEach((file, index) => {
+        const fileItem = document.createElement('div');
+        fileItem.className = 'file-preview-item';
+        fileItem.setAttribute('data-file-index', index);
+        
+        if (file.type.startsWith('image/')) {
+            // Create image preview for image files
+            const img = document.createElement('img');
+            img.src = URL.createObjectURL(file);
+            img.onload = () => URL.revokeObjectURL(img.src); // Free memory
+            fileItem.appendChild(img);
+        } else {
+            // Create icon for non-image files (PDF, etc.)
+            const fileIcon = document.createElement('div');
+            fileIcon.innerHTML = '📄';
+            fileIcon.style.fontSize = '40px';
+            fileIcon.style.display = 'flex';
+            fileIcon.style.alignItems = 'center';
+            fileIcon.style.justifyContent = 'center';
+            fileIcon.style.width = '80px';
+            fileIcon.style.height = '80px';
+            fileIcon.style.border = '2px solid var(--border-color)';
+            fileIcon.style.borderRadius = '4px';
+            fileIcon.style.backgroundColor = 'var(--light-beige)';
+            fileItem.appendChild(fileIcon);
+        }
+        
+        // Add file name
+        const fileName = document.createElement('div');
+        fileName.className = 'file-preview-name';
+        fileName.textContent = file.name;
+        fileName.title = file.name; // Show full name on hover
+        fileItem.appendChild(fileName);
+        
+        // Add remove button
+        const removeBtn = document.createElement('button');
+        removeBtn.className = 'remove-file';
+        removeBtn.innerHTML = '×';
+        removeBtn.title = 'Ta bort fil';
+        removeBtn.onclick = (e) => {
+            e.preventDefault();
+            removeFile(index, event.target);
+        };
+        fileItem.appendChild(removeBtn);
+        
+        filePreview.appendChild(fileItem);
+    });
+}
+
+// Remove a file from selection
+function removeFile(fileIndex, fileInput) {
+    const dt = new DataTransfer();
+    const files = Array.from(fileInput.files);
+    
+    // Add all files except the one to remove
+    files.forEach((file, index) => {
+        if (index !== fileIndex) {
+            dt.items.add(file);
+        }
+    });
+    
+    // Update file input
+    fileInput.files = dt.files;
+    
+    // Trigger change event to update preview
+    fileInput.dispatchEvent(new Event('change'));
 }
 
 // Handle story form submission
 function handleStoryForm(e) {
     e.preventDefault();
     const formData = new FormData(e.target);
+    
+    // Get uploaded files
+    const fileInput = document.getElementById('drawings');
+    const uploadedFiles = Array.from(fileInput.files);
+    
+    // Validate that at least one file is uploaded
+    if (uploadedFiles.length === 0) {
+        alert('Vänligen ladda upp minst en teckning av ditt barn.');
+        return;
+    }
+    
     const childData = {
         childName: formData.get('childName'),
         childAge: formData.get('childAge'),
@@ -163,12 +265,63 @@ function handleStoryForm(e) {
         favoriteFood: formData.get('favoriteFood'),
         favoriteActivity: formData.get('favoriteActivity'),
         bestMemory: formData.get('bestMemory'),
-        personality: formData.get('personality')
+        personality: formData.get('personality'),
+        drawings: uploadedFiles.map(file => ({
+            name: file.name,
+            size: file.size,
+            type: file.type,
+            lastModified: file.lastModified
+        }))
     };
     
+    // Store file metadata (actual files would be uploaded to server in production)
     saveData('child', childData);
+    
+    // Store actual files in a separate key for this demo
+    saveFiles('drawings', uploadedFiles);
+    
     hideStoryModal();
     window.location.href = 'story.html';
+}
+
+// Helper function to save files (for demonstration purposes)
+// In production, files would be uploaded to a server or cloud storage
+function saveFiles(key, files) {
+    try {
+        // Convert files to base64 for local storage (only for demo)
+        // Note: This is not recommended for production due to size limitations
+        const filePromises = Array.from(files).map(file => {
+            return new Promise((resolve) => {
+                const reader = new FileReader();
+                reader.onload = () => {
+                    resolve({
+                        name: file.name,
+                        type: file.type,
+                        size: file.size,
+                        data: reader.result // Base64 data
+                    });
+                };
+                // Only store images as base64, skip large files
+                if (file.type.startsWith('image/') && file.size < 5 * 1024 * 1024) { // 5MB limit
+                    reader.readAsDataURL(file);
+                } else {
+                    resolve({
+                        name: file.name,
+                        type: file.type,
+                        size: file.size,
+                        data: null // Don't store large files in localStorage
+                    });
+                }
+            });
+        });
+        
+        Promise.all(filePromises).then(fileData => {
+            localStorage.setItem(`sigvardsson_${key}`, JSON.stringify(fileData));
+        });
+    } catch (error) {
+        console.warn('Could not save files locally:', error);
+        // Continue anyway since file metadata is still saved
+    }
 }
 
 async function handleLogin(e) {

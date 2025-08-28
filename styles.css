@@ -387,6 +387,105 @@ body {
     padding: 1.3rem 2rem;
 }
 
+/* File upload styles */
+.file-upload-container {
+    border: 2px dashed var(--border-color);
+    border-radius: 8px;
+    padding: 1.5rem;
+    text-align: center;
+    background-color: var(--light-beige);
+    transition: border-color 0.3s ease, background-color 0.3s ease;
+}
+
+.file-upload-container:hover {
+    border-color: var(--accent-color);
+    background-color: var(--secondary-color);
+}
+
+.file-upload-container input[type="file"] {
+    margin-bottom: 1rem;
+    padding: 0.8rem;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    background-color: var(--white);
+    cursor: pointer;
+}
+
+.file-upload-container input[type="file"]:hover {
+    border-color: var(--accent-color);
+}
+
+.file-upload-info {
+    margin-top: 0.5rem;
+}
+
+.file-help-text {
+    font-size: 0.9rem;
+    color: var(--text-color);
+    margin: 0 0 0.5rem 0;
+    font-weight: 500;
+}
+
+.file-format-text {
+    font-size: 0.8rem;
+    color: #6c757d;
+    margin: 0;
+}
+
+.file-preview {
+    margin-top: 1rem;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    justify-content: center;
+}
+
+.file-preview-item {
+    position: relative;
+    display: inline-block;
+    margin: 0.25rem;
+}
+
+.file-preview img {
+    max-width: 80px;
+    max-height: 80px;
+    border-radius: 4px;
+    border: 2px solid var(--border-color);
+    object-fit: cover;
+}
+
+.file-preview-name {
+    font-size: 0.7rem;
+    color: var(--text-color);
+    text-align: center;
+    margin-top: 0.25rem;
+    max-width: 80px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.remove-file {
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    background: var(--primary-color);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 20px;
+    height: 20px;
+    font-size: 12px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.remove-file:hover {
+    background: #8B4513;
+}
+
 @media (max-width: 768px) {
     .navbar {
         padding: 1rem;
