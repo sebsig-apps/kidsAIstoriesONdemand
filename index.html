@@ -156,6 +156,18 @@
                             <textarea id="personality" name="personality" placeholder="Beskriv ditt barns personlighet, vad som gör hen unik..."></textarea>
                         </div>
 
+                        <div class="form-group">
+                            <label for="drawings">Barnets teckningar *</label>
+                            <div class="file-upload-container">
+                                <input type="file" id="drawings" name="drawings" accept=".jpg,.jpeg,.png,.gif,.bmp,.webp,.heic,.heif,.pdf,.tiff,.tif" multiple required>
+                                <div class="file-upload-info">
+                                    <p class="file-help-text">Ladda upp foton av ditt barns teckningar. Du kan välja flera bilder samtidigt.</p>
+                                    <p class="file-format-text">Accepterade format: JPEG, PNG, GIF, BMP, WebP, HEIC, PDF, TIFF</p>
+                                </div>
+                                <div id="file-preview" class="file-preview"></div>
+                            </div>
+                        </div>
+
                         <button type="submit" class="primary-button">Skapa berättelse</button>
                     </form>
                 </div>
