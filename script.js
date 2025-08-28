@@ -292,26 +292,17 @@ async function handleStoryForm(e) {
             }))
         );
 
-        // Call Edge Function
-        const response = await supabase.functions.invoke('generate-story', {
-            body: {
-                childData,
-                drawings: drawingsData
-            }
-        });
-
-        if (response.error) {
-            throw new Error(response.error.message || 'Failed to start story generation');
-        }
-
-        const { storyId } = response.data;
+        // TEMPORARY: Create mock story for immediate testing
+        console.log('Creating mock story for immediate testing...');
         
         // Hide modal and show progress
         hideStoryModal();
-        showStoryProgressPage(storyId);
+        showStoryProgressPage('mock-story-id');
         
-        // Subscribe to real-time updates
-        subscribeToStoryUpdates(storyId);
+        // Simulate story generation with immediate results
+        setTimeout(() => {
+            simulateStoryGeneration(childData, uploadedFiles);
+        }, 1000);
 
     } catch (error) {
         console.error('Story generation error:', error);
@@ -542,6 +533,207 @@ function showSimpleStoryDisplay(story, images) {
     `;
     
     mainContent.innerHTML = storyHTML;
+}
+
+// Simulate story generation for immediate testing
+function simulateStoryGeneration(childData, uploadedFiles) {
+    console.log('Starting simulated story generation...');
+    
+    // Update progress step by step
+    updateProgressUI({ status: 'generating_story' });
+    
+    setTimeout(() => {
+        updateProgressUI({ status: 'generating_images' });
+        
+        setTimeout(() => {
+            // Create mock story
+            const mockStory = createMockStory(childData, uploadedFiles);
+            updateProgressUI({ status: 'completed' });
+            
+            setTimeout(() => {
+                showMockStory(mockStory, uploadedFiles);
+            }, 1000);
+        }, 2000);
+    }, 2000);
+}
+
+// Create a mock story based on user input
+function createMockStory(childData, uploadedFiles) {
+    const stories = [
+        `Det var en gång en ${childData.childAge}-årig hjälte vid namn ${childData.childName} som älskade att ${childData.favoriteActivity}.`,
+        `En magisk dag upptäckte ${childData.childName} något fantastiskt när hen åt sin favorit ${childData.favoriteFood}.`,
+        `${childData.childName} mindes det underbara minnet: ${childData.bestMemory}.`,
+        `Med mod i hjärtat och kärlek för ${childData.favoriteActivity}, begav sig ${childData.childName} ut på ett äventyr.`,
+        `På vägen mötte ${childData.childName} vänliga varelser som också älskade ${childData.favoriteFood}.`,
+        `Tillsammans lärde de sig att dela är att bry sig om varandra.`,
+        `${childData.childName} visade alla hur roligt det var att ${childData.favoriteActivity} tillsammans.`,
+        `Snart blev ${childData.childName} känd som den vänligaste och modigaste av alla.`,
+        `När äventyret var över, kom ${childData.childName} hem full av glädje och nya vänner.`,
+        `Och så levde ${childData.childName} lyckligt i alla sina dagar, alltid redo för nya äventyr.`
+    ];
+
+    return {
+        id: 'mock-story-' + Date.now(),
+        title: `${childData.childName}s Magiska Äventyr`,
+        child_name: childData.childName,
+        story_data: {
+            title: `${childData.childName}s Magiska Äventyr`,
+            pages: stories.map((text, index) => ({
+                page: index + 1,
+                text: text,
+                imagePrompt: `Children's book illustration showing ${childData.childName} in a magical adventure`
+            }))
+        }
+    };
+}
+
+// Show mock story with user images
+function showMockStory(story, uploadedFiles) {
+    const mainContent = document.querySelector('.main-content');
+    const storyData = story.story_data;
+    
+    // Create images array - use user files for first pages, placeholders for rest
+    const images = [];
+    
+    // Add user drawings for first pages
+    uploadedFiles.forEach((file, index) => {
+        if (index < 10) {
+            images.push({
+                page_number: index + 1,
+                image_type: 'user_drawing',
+                image_url: URL.createObjectURL(file)
+            });
+        }
+    });
+    
+    // Add placeholder images for remaining pages
+    for (let i = uploadedFiles.length; i < 10; i++) {
+        images.push({
+            page_number: i + 1,
+            image_type: 'ai_generated',
+            image_url: 'https://via.placeholder.com/400x300/8B4513/FFFFFF?text=AI+Bild+' + (i + 1)
+        });
+    }
+    
+    // Store for navigation
+    window.currentStory = {
+        data: storyData,
+        images: images,
+        currentPage: 1,
+        childName: story.child_name
+    };
+    
+    const storyHTML = `
+        <div class="story-book-container">
+            <div class="story-book-header">
+                <h1>${storyData.title}</h1>
+                <p class="story-subtitle">En magisk berättelse för ${story.child_name}</p>
+                <div class="book-controls">
+                    <button onclick="printStory()" class="control-button print-btn">📖 Skriv ut bok</button>
+                    <button onclick="orderStory()" class="control-button order-btn">🛒 Beställ tryckt bok</button>
+                    <button onclick="createNewStory()" class="control-button new-story-btn">✨ Ny berättelse</button>
+                </div>
+            </div>
+            
+            <div class="story-book-viewer">
+                <div class="book-navigation">
+                    <button class="nav-arrow nav-prev" onclick="previousPage()" disabled>
+                        ← Föregående
+                    </button>
+                    <div class="page-indicator">
+                        <span id="current-page">1</span> av <span id="total-pages">${storyData.pages.length}</span>
+                    </div>
+                    <button class="nav-arrow nav-next" onclick="nextPage()">
+                        Nästa →
+                    </button>
+                </div>
+                
+                <div class="book-pages-container">
+                    ${storyData.pages.map((page, index) => {
+                        const pageImage = images.find(img => img.page_number === page.page);
+                        const imageUrl = pageImage ? pageImage.image_url : 'https://via.placeholder.com/400x300/8B4513/FFFFFF?text=Sida+' + page.page;
+                        const isUserDrawing = pageImage && pageImage.image_type === 'user_drawing';
+                        
+                        return `
+                            <div class="book-page ${index === 0 ? 'active' : ''}" id="page-${page.page}">
+                                <div class="page-content">
+                                    <div class="page-number">Sida ${page.page}</div>
+                                    <div class="page-layout">
+                                        <div class="page-image ${isUserDrawing ? 'user-drawing' : 'ai-image'}">
+                                            <img src="${imageUrl}" alt="Illustration för sida ${page.page}" loading="lazy">
+                                            ${isUserDrawing ? '<div class="drawing-label">Din teckning ✨</div>' : ''}
+                                        </div>
+                                        <div class="page-text">
+                                            <p>${page.text}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    }).join('')}
+                </div>
+            </div>
+        </div>
+    `;
+
+    mainContent.innerHTML = storyHTML;
+    console.log('Mock story displayed successfully!');
+}
+
+// Navigation functions for book
+function nextPage() {
+    if (window.currentStory && window.currentStory.currentPage < window.currentStory.data.pages.length) {
+        window.currentStory.currentPage++;
+        updatePageDisplay();
+    }
+}
+
+function previousPage() {
+    if (window.currentStory && window.currentStory.currentPage > 1) {
+        window.currentStory.currentPage--;
+        updatePageDisplay();
+    }
+}
+
+function updatePageDisplay() {
+    if (!window.currentStory) return;
+    
+    const currentPage = window.currentStory.currentPage;
+    const totalPages = window.currentStory.data.pages.length;
+    
+    // Hide all pages
+    document.querySelectorAll('.book-page').forEach(page => {
+        page.classList.remove('active');
+    });
+    
+    // Show current page
+    const currentPageElement = document.getElementById(`page-${currentPage}`);
+    if (currentPageElement) {
+        currentPageElement.classList.add('active');
+    }
+    
+    // Update page indicator
+    const currentPageSpan = document.getElementById('current-page');
+    if (currentPageSpan) {
+        currentPageSpan.textContent = currentPage;
+    }
+    
+    // Update navigation buttons
+    const prevBtn = document.querySelector('.nav-prev');
+    const nextBtn = document.querySelector('.nav-next');
+    
+    if (prevBtn) prevBtn.disabled = currentPage === 1;
+    if (nextBtn) nextBtn.disabled = currentPage === totalPages;
+}
+
+function printStory() {
+    window.print();
+}
+
+function orderStory() {
+    if (window.currentStory) {
+        alert(`Fantastisk! "${window.currentStory.data.title}" för ${window.currentStory.childName} är redo att beställas som tryckt bok. Denna funktion kommer snart!`);
+    }
 }
 
 // Helper function to save files (for demonstration purposes)
