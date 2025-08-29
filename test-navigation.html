@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Navigation Test</title>
+    <style>
+        :root {
+            --primary-color: #667eea;
+            --accent-color: #f093fb;
+        }
+        body { font-family: Arial, sans-serif; margin: 0; padding: 20px; background: #f5f5f5; }
+    </style>
+</head>
+<body>
+    <h1>Testing Navigation System</h1>
+    <div class="main-content"></div>
+
+    <script>
+        // Setup test data
+        window.storyPages = [
+            { text: "Det var en gång en 5-årig hjälte vid namn Test som älskade att läsa." },
+            { text: "En magisk dag upptäckte Test något fantastiskt när hen åt sin favorit pannkakor." },
+            { text: "Test mindes det underbara minnet: Vi byggde sandslott tillsammans." }
+        ];
+        window.currentPageIndex = 0;
+        window.userFiles = [];
+
+        // BULLETPROOF SIMPLE NAVIGATION - NO MORE ERRORS
+        window.goToNextPage = function() {
+            console.log('NEXT button clicked, current page:', window.currentPageIndex);
+            try {
+                if (window.currentPageIndex < window.storyPages.length - 1) {
+                    window.currentPageIndex++;
+                    console.log('Moving to page:', window.currentPageIndex + 1);
+                    showCurrentPage();
+                }
+            } catch (e) {
+                console.error('Next page error:', e);
+                alert('Ett fel uppstod vid navigation: ' + e.message);
+            }
+        }
+
+        window.goToPrevPage = function() {
+            console.log('PREV button clicked, current page:', window.currentPageIndex);
+            try {
+                if (window.currentPageIndex > 0) {
+                    window.currentPageIndex--;
+                    console.log('Moving to page:', window.currentPageIndex + 1);
+                    showCurrentPage();
+                }
+            } catch (e) {
+                console.error('Previous page error:', e);
+                alert('Ett fel uppstod vid navigation: ' + e.message);
+            }
+        }
+
+        function showCurrentPage() {
+            console.log('showCurrentPage called, index:', window.currentPageIndex);
+            
+            try {
+                const mainContent = document.querySelector('.main-content');
+                if (!mainContent) {
+                    console.error('Main content not found!');
+                    return;
+                }
+                
+                const page = window.storyPages[window.currentPageIndex];
+                if (!page) {
+                    console.error('Page not found at index:', window.currentPageIndex);
+                    return;
+                }
+                
+                const pageNum = window.currentPageIndex + 1;
+                const totalPages = window.storyPages.length;
+                
+                console.log('Displaying page', pageNum, 'of', totalPages);
+                
+                // Get image for this page - SAFE VERSION
+                let imageUrl = 'https://via.placeholder.com/400x300/8B4513/FFFFFF?text=Sida+' + pageNum;
+                let isUserDrawing = false;
+                
+                const html = `
+                    <div style="max-width: 800px; margin: 0 auto; background: white; padding: 2rem; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1);">
+                        <div style="text-align: center; margin-bottom: 2rem;">
+                            <h1 style="color: var(--primary-color);">Magisk Berättelse</h1>
+                            <div style="margin: 1rem 0;">
+                                <button onclick="window.goToPrevPage()" ${window.currentPageIndex === 0 ? 'disabled style="opacity:0.5;"' : ''} style="margin-right: 1rem; padding: 0.8rem 1.5rem; background: var(--primary-color); color: white; border: none; border-radius: 8px; cursor: pointer;">← Föregående</button>
+                                <span style="font-weight: bold;">Sida ${pageNum} av ${totalPages}</span>
+                                <button onclick="window.goToNextPage()" ${window.currentPageIndex === totalPages - 1 ? 'disabled style="opacity:0.5;"' : ''} style="margin-left: 1rem; padding: 0.8rem 1.5rem; background: var(--primary-color); color: white; border: none; border-radius: 8px; cursor: pointer;">Nästa →</button>
+                            </div>
+                        </div>
+                        
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; align-items: center; margin: 2rem 0;">
+                            <div style="text-align: center;">
+                                <img src="${imageUrl}" style="max-width: 100%; max-height: 300px; border-radius: 8px; border: 2px solid var(--accent-color);" alt="Sida ${pageNum}">
+                            </div>
+                            <div style="font-size: 1.2rem; line-height: 1.6; padding: 1.5rem; background: #f8f9fa; border-radius: 8px;">
+                                ${page.text}
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                mainContent.innerHTML = html;
+                console.log('Page display completed successfully');
+                
+            } catch (error) {
+                console.error('Error in showCurrentPage:', error);
+                alert('Ett fel uppstod vid visning av sidan. Ladda om sidan och försök igen.');
+            }
+        }
+
+        // Start the test
+        document.addEventListener('DOMContentLoaded', function() {
+            showCurrentPage();
+        });
+    </script>
+</body>
+</html>

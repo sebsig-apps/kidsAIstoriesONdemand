@@ -586,229 +586,123 @@ function createMockStory(childData, uploadedFiles) {
     };
 }
 
-// Show mock story with user images
+// SIMPLE VERSION - Show mock story with working navigation
 function showMockStory(story, uploadedFiles) {
     const mainContent = document.querySelector('.main-content');
     const storyData = story.story_data;
     
-    // Create images array - use user files for first pages, placeholders for rest
-    const images = [];
+    // Simple global variables for navigation
+    window.storyPages = storyData.pages;
+    window.currentPageIndex = 0;
+    window.userFiles = uploadedFiles;
     
-    // Add user drawings for first pages
-    uploadedFiles.forEach((file, index) => {
-        if (index < 10) {
-            images.push({
-                page_number: index + 1,
-                image_type: 'user_drawing',
-                image_url: URL.createObjectURL(file)
-            });
+    // Simple display function
+    showCurrentPage();
+}
+
+// BULLETPROOF SIMPLE PAGE DISPLAY - NO ERRORS
+function showCurrentPage() {
+    console.log('showCurrentPage called, index:', window.currentPageIndex);
+    
+    try {
+        const mainContent = document.querySelector('.main-content');
+        if (!mainContent) {
+            console.error('Main content not found!');
+            return;
         }
-    });
+        
+        const page = window.storyPages[window.currentPageIndex];
+        if (!page) {
+            console.error('Page not found at index:', window.currentPageIndex);
+            return;
+        }
+        
+        const pageNum = window.currentPageIndex + 1;
+        const totalPages = window.storyPages.length;
+        
+        console.log('Displaying page', pageNum, 'of', totalPages);
+        
+        // Get image for this page - SAFE VERSION
+        let imageUrl = 'https://via.placeholder.com/400x300/8B4513/FFFFFF?text=Sida+' + pageNum;
+        let isUserDrawing = false;
+        
+        if (window.userFiles && window.currentPageIndex < window.userFiles.length) {
+            try {
+                imageUrl = URL.createObjectURL(window.userFiles[window.currentPageIndex]);
+                isUserDrawing = true;
+                console.log('Using user drawing for page', pageNum);
+            } catch (imgError) {
+                console.log('Could not load user image, using placeholder');
+                // Keep the placeholder URL
+            }
+        }
     
-    // Add placeholder images for remaining pages
-    for (let i = uploadedFiles.length; i < 10; i++) {
-        images.push({
-            page_number: i + 1,
-            image_type: 'ai_generated',
-            image_url: 'https://via.placeholder.com/400x300/8B4513/FFFFFF?text=AI+Bild+' + (i + 1)
-        });
-    }
-    
-    // Store for navigation
-    window.currentStory = {
-        data: storyData,
-        images: images,
-        currentPage: 1,
-        childName: story.child_name
-    };
-    
-    const storyHTML = `
-        <div class="story-book-container">
-            <div class="story-book-header">
-                <h1>${storyData.title}</h1>
-                <p class="story-subtitle">En magisk berättelse för ${story.child_name}</p>
-                <div class="book-controls">
-                    <button onclick="orderStory()" class="control-button order-btn">🛒 Beställ tryckt bok</button>
-                    <button onclick="createNewStory()" class="control-button new-story-btn">✨ Ny berättelse</button>
-                </div>
-            </div>
-            
-            <div class="story-book-viewer">
-                <div class="book-navigation">
-                    <button class="nav-arrow nav-prev" id="prev-btn" disabled>
-                        ← Föregående
-                    </button>
-                    <div class="page-indicator">
-                        <span id="current-page">1</span> av <span id="total-pages">${storyData.pages.length}</span>
+        const html = `
+            <div style="max-width: 800px; margin: 0 auto; background: white; padding: 2rem; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1);">
+                <div style="text-align: center; margin-bottom: 2rem;">
+                    <h1 style="color: var(--primary-color);">Magisk Berättelse</h1>
+                    <div style="margin: 1rem 0;">
+                        <button onclick="window.goToPrevPage()" ${window.currentPageIndex === 0 ? 'disabled style="opacity:0.5;"' : ''} style="margin-right: 1rem; padding: 0.8rem 1.5rem; background: var(--primary-color); color: white; border: none; border-radius: 8px; cursor: pointer;">← Föregående</button>
+                        <span style="font-weight: bold;">Sida ${pageNum} av ${totalPages}</span>
+                        <button onclick="window.goToNextPage()" ${window.currentPageIndex === totalPages - 1 ? 'disabled style="opacity:0.5;"' : ''} style="margin-left: 1rem; padding: 0.8rem 1.5rem; background: var(--primary-color); color: white; border: none; border-radius: 8px; cursor: pointer;">Nästa →</button>
                     </div>
-                    <button class="nav-arrow nav-next" id="next-btn">
-                        Nästa →
-                    </button>
                 </div>
                 
-                <div class="book-pages-container">
-                    ${storyData.pages.map((page, index) => {
-                        const pageImage = images.find(img => img.page_number === page.page);
-                        const imageUrl = pageImage ? pageImage.image_url : 'https://via.placeholder.com/400x300/8B4513/FFFFFF?text=Sida+' + page.page;
-                        const isUserDrawing = pageImage && pageImage.image_type === 'user_drawing';
-                        
-                        return `
-                            <div class="book-page ${index === 0 ? 'active' : ''}" id="page-${page.page}">
-                                <div class="page-content">
-                                    <div class="page-number">Sida ${page.page}</div>
-                                    <div class="page-layout">
-                                        <div class="page-image ${isUserDrawing ? 'user-drawing' : 'ai-image'}">
-                                            <img src="${imageUrl}" alt="Illustration för sida ${page.page}" loading="lazy">
-                                            ${isUserDrawing ? '<div class="drawing-label">Din teckning ✨</div>' : ''}
-                                        </div>
-                                        <div class="page-text">
-                                            <p>${page.text}</p>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        `;
-                    }).join('')}
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; align-items: center; margin: 2rem 0;">
+                    <div style="text-align: center;">
+                        <img src="${imageUrl}" style="max-width: 100%; max-height: 300px; border-radius: 8px; border: ${isUserDrawing ? '3px solid #f39c12' : '2px solid var(--accent-color)'};" alt="Sida ${pageNum}">
+                        ${isUserDrawing ? '<div style="margin-top: 0.5rem; color: #f39c12; font-weight: bold;">Din teckning ✨</div>' : ''}
+                    </div>
+                    <div style="font-size: 1.2rem; line-height: 1.6; padding: 1.5rem; background: #f8f9fa; border-radius: 8px;">
+                        ${page.text}
+                    </div>
+                </div>
+                
+                <div style="text-align: center; margin-top: 2rem;">
+                    <button onclick="window.location.reload()" style="padding: 0.8rem 1.5rem; background: var(--accent-color); color: white; border: none; border-radius: 8px; cursor: pointer;">Skapa ny berättelse</button>
                 </div>
             </div>
-        </div>
-    `;
-
-    mainContent.innerHTML = storyHTML;
-    console.log('Mock story displayed successfully!');
-    
-    // Add event listeners after HTML is created
-    setupNavigationButtons();
-}
-
-// Setup navigation button event listeners
-function setupNavigationButtons() {
-    const prevBtn = document.getElementById('prev-btn');
-    const nextBtn = document.getElementById('next-btn');
-    
-    console.log('Setting up navigation buttons:', { prevBtn, nextBtn });
-    
-    if (prevBtn) {
-        prevBtn.addEventListener('click', function() {
-            console.log('Previous button clicked!');
-            previousPage();
-        });
-    }
-    
-    if (nextBtn) {
-        nextBtn.addEventListener('click', function() {
-            console.log('Next button clicked!');
-            nextPage();
-        });
-    }
-    
-    // Also add keyboard navigation
-    document.addEventListener('keydown', function(e) {
-        if (!window.currentStory) return;
+        `;
         
-        if (e.key === 'ArrowLeft') {
-            previousPage();
-        } else if (e.key === 'ArrowRight') {
-            nextPage();
+        mainContent.innerHTML = html;
+        console.log('Page display completed successfully');
+        
+    } catch (error) {
+        console.error('Error in showCurrentPage:', error);
+        alert('Ett fel uppstod vid visning av sidan. Ladda om sidan och försök igen.');
+    }
+}
+
+// BULLETPROOF SIMPLE NAVIGATION - NO MORE ERRORS
+window.goToNextPage = function() {
+    console.log('NEXT button clicked, current page:', window.currentPageIndex);
+    try {
+        if (window.currentPageIndex < window.storyPages.length - 1) {
+            window.currentPageIndex++;
+            console.log('Moving to page:', window.currentPageIndex + 1);
+            showCurrentPage();
         }
-    });
-}
-
-// Navigation functions for book
-function nextPage() {
-    console.log('Next page clicked, current story:', window.currentStory);
-    if (window.currentStory && window.currentStory.currentPage < window.currentStory.data.pages.length) {
-        window.currentStory.currentPage++;
-        console.log('Moving to page:', window.currentStory.currentPage);
-        updatePageDisplay();
+    } catch (e) {
+        console.error('Next page error:', e);
+        alert('Ett fel uppstod vid navigation: ' + e.message);
     }
 }
 
-function previousPage() {
-    console.log('Previous page clicked, current story:', window.currentStory);
-    if (window.currentStory && window.currentStory.currentPage > 1) {
-        window.currentStory.currentPage--;
-        console.log('Moving to page:', window.currentStory.currentPage);
-        updatePageDisplay();
+window.goToPrevPage = function() {
+    console.log('PREV button clicked, current page:', window.currentPageIndex);
+    try {
+        if (window.currentPageIndex > 0) {
+            window.currentPageIndex--;
+            console.log('Moving to page:', window.currentPageIndex + 1);
+            showCurrentPage();
+        }
+    } catch (e) {
+        console.error('Previous page error:', e);
+        alert('Ett fel uppstod vid navigation: ' + e.message);
     }
 }
 
-// Expose functions globally to ensure they're accessible from onclick handlers
-window.nextPage = nextPage;
-window.previousPage = previousPage;
-
-function updatePageDisplay() {
-    if (!window.currentStory) {
-        console.log('No current story available');
-        return;
-    }
-    
-    const currentPage = window.currentStory.currentPage;
-    const totalPages = window.currentStory.data.pages.length;
-    
-    console.log(`Updating page display: ${currentPage} of ${totalPages}`);
-    
-    // Hide all pages
-    const allPages = document.querySelectorAll('.book-page');
-    console.log('Found pages:', allPages.length);
-    allPages.forEach(page => {
-        page.classList.remove('active');
-    });
-    
-    // Show current page
-    const currentPageElement = document.getElementById(`page-${currentPage}`);
-    console.log('Current page element:', currentPageElement);
-    if (currentPageElement) {
-        currentPageElement.classList.add('active');
-        console.log('Added active class to page', currentPage);
-    } else {
-        console.error('Could not find page element for page', currentPage);
-    }
-    
-    // Update page indicator
-    const currentPageSpan = document.getElementById('current-page');
-    if (currentPageSpan) {
-        currentPageSpan.textContent = currentPage;
-        console.log('Updated page indicator to', currentPage);
-    }
-    
-    // Update navigation buttons
-    const prevBtn = document.getElementById('prev-btn');
-    const nextBtn = document.getElementById('next-btn');
-    
-    if (prevBtn) {
-        prevBtn.disabled = currentPage === 1;
-        console.log('Previous button disabled:', currentPage === 1);
-    }
-    if (nextBtn) {
-        nextBtn.disabled = currentPage === totalPages;
-        console.log('Next button disabled:', currentPage === totalPages);
-    }
-}
-
-function orderStory() {
-    if (window.currentStory) {
-        alert(`Fantastisk! "${window.currentStory.data.title}" för ${window.currentStory.childName} är redo att beställas som tryckt bok. Denna funktion kommer snart!`);
-    }
-}
-
-function createNewStory() {
-    // Clear any stored data
-    localStorage.removeItem('sigvardsson_child');
-    localStorage.removeItem('sigvardsson_drawings');
-    
-    // Clean up current story
-    if (window.currentStory) {
-        window.currentStory = null;
-    }
-    
-    // Show the modal again
-    showStoryModal();
-}
-
-// Expose functions globally
-window.orderStory = orderStory;
-window.createNewStory = createNewStory;
+// Remove old complex navigation code - using simple version above
 
 // Helper function to save files (for demonstration purposes)
 // In production, files would be uploaded to a server or cloud storage
