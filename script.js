@@ -595,9 +595,30 @@ function showMockStory(story, uploadedFiles) {
     window.storyPages = storyData.pages;
     window.currentPageIndex = 0;
     window.userFiles = uploadedFiles;
+    window.currentStory = {
+        title: storyData.title,
+        childName: story.child_name
+    };
     
     // Simple display function
     showCurrentPage();
+}
+
+// Order story function
+function orderStory() {
+    const childName = window.currentStory.childName || 'ditt barn';
+    const title = window.currentStory.title || 'Magisk Berättelse';
+    alert(`Fantastisk! "${title}" för ${childName} är redo att beställas som tryckt bok. Denna funktion kommer snart!`);
+}
+
+// Create new story function
+function createNewStory() {
+    // Clear any stored data
+    localStorage.removeItem('sigvardsson_child');
+    localStorage.removeItem('sigvardsson_drawings');
+    
+    // Show the modal again
+    showStoryModal();
 }
 
 // BULLETPROOF SIMPLE PAGE DISPLAY - NO ERRORS
@@ -622,8 +643,8 @@ function showCurrentPage() {
         
         console.log('Displaying page', pageNum, 'of', totalPages);
         
-        // Get image for this page - SAFE VERSION
-        let imageUrl = 'https://via.placeholder.com/400x300/8B4513/FFFFFF?text=Sida+' + pageNum;
+        // Get image for this page - USER DRAWINGS FIRST, THEN AI IMAGES
+        let imageUrl = '';
         let isUserDrawing = false;
         
         if (window.userFiles && window.currentPageIndex < window.userFiles.length) {
@@ -632,34 +653,71 @@ function showCurrentPage() {
                 isUserDrawing = true;
                 console.log('Using user drawing for page', pageNum);
             } catch (imgError) {
-                console.log('Could not load user image, using placeholder');
-                // Keep the placeholder URL
+                console.log('Could not load user image, using AI image');
             }
+        }
+        
+        // If no user drawing, generate AI image URL
+        if (!imageUrl) {
+            const aiImagePrompts = [
+                'Cheerful children\'s book illustration showing a brave child on a magical adventure in a colorful forest',
+                'Whimsical watercolor illustration of a child discovering something wonderful while eating their favorite food',
+                'Magical children\'s book art showing a child remembering happy memories with sparkles around them',
+                'Bright illustration of a courageous child starting an adventure with magical creatures nearby',
+                'Colorful children\'s book scene showing a child meeting friendly forest animals who share food',
+                'Warm illustration depicting children learning to share and care for each other in a magical setting',
+                'Joyful children\'s book art showing kids playing and having fun together in a magical world',
+                'Inspiring illustration of a child becoming known as the kindest and bravest hero in the land',
+                'Happy children\'s book scene showing a child returning home full of joy and new friends',
+                'Magical ending illustration of a child living happily with sparkles and rainbow colors around them'
+            ];
+            
+            // Generate AI image using a children's book illustration API or placeholder
+            const prompt = aiImagePrompts[window.currentPageIndex] || aiImagePrompts[0];
+            imageUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt + ', children\'s book illustration, colorful, friendly, magical, watercolor style')}/1024x1024`;
+            console.log('Using AI generated image for page', pageNum, 'with prompt:', prompt);
         }
     
         const html = `
-            <div style="max-width: 800px; margin: 0 auto; background: white; padding: 2rem; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1);">
-                <div style="text-align: center; margin-bottom: 2rem;">
-                    <h1 style="color: var(--primary-color);">Magisk Berättelse</h1>
-                    <div style="margin: 1rem 0;">
-                        <button onclick="window.goToPrevPage()" ${window.currentPageIndex === 0 ? 'disabled style="opacity:0.5;"' : ''} style="margin-right: 1rem; padding: 0.8rem 1.5rem; background: var(--primary-color); color: white; border: none; border-radius: 8px; cursor: pointer;">← Föregående</button>
-                        <span style="font-weight: bold;">Sida ${pageNum} av ${totalPages}</span>
-                        <button onclick="window.goToNextPage()" ${window.currentPageIndex === totalPages - 1 ? 'disabled style="opacity:0.5;"' : ''} style="margin-left: 1rem; padding: 0.8rem 1.5rem; background: var(--primary-color); color: white; border: none; border-radius: 8px; cursor: pointer;">Nästa →</button>
+            <div class="story-book-container">
+                <div class="story-book-header">
+                    <h1>${window.currentStory.title || 'Magisk Berättelse'}</h1>
+                    <p class="story-subtitle">En magisk berättelse för ${window.currentStory.childName || 'ditt barn'}</p>
+                    <div class="book-controls">
+                        <button onclick="orderStory()" class="control-button order-btn">🛒 Beställ tryckt bok</button>
+                        <button onclick="createNewStory()" class="control-button new-story-btn">✨ Ny berättelse</button>
                     </div>
                 </div>
                 
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; align-items: center; margin: 2rem 0;">
-                    <div style="text-align: center;">
-                        <img src="${imageUrl}" style="max-width: 100%; max-height: 300px; border-radius: 8px; border: ${isUserDrawing ? '3px solid #f39c12' : '2px solid var(--accent-color)'};" alt="Sida ${pageNum}">
-                        ${isUserDrawing ? '<div style="margin-top: 0.5rem; color: #f39c12; font-weight: bold;">Din teckning ✨</div>' : ''}
+                <div class="story-book-viewer">
+                    <div class="book-navigation">
+                        <button class="nav-arrow nav-prev" onclick="window.goToPrevPage()" ${window.currentPageIndex === 0 ? 'disabled' : ''}>
+                            ← Föregående
+                        </button>
+                        <div class="page-indicator">
+                            <span id="current-page">${pageNum}</span> av <span id="total-pages">${totalPages}</span>
+                        </div>
+                        <button class="nav-arrow nav-next" onclick="window.goToNextPage()" ${window.currentPageIndex === totalPages - 1 ? 'disabled' : ''}>
+                            Nästa →
+                        </button>
                     </div>
-                    <div style="font-size: 1.2rem; line-height: 1.6; padding: 1.5rem; background: #f8f9fa; border-radius: 8px;">
-                        ${page.text}
+                    
+                    <div class="book-pages-container">
+                        <div class="book-page active" id="page-${pageNum}">
+                            <div class="page-content">
+                                <div class="page-number">Sida ${pageNum}</div>
+                                <div class="page-layout">
+                                    <div class="page-image ${isUserDrawing ? 'user-drawing' : 'ai-image'}">
+                                        <img src="${imageUrl}" alt="Illustration för sida ${pageNum}" loading="lazy">
+                                        ${isUserDrawing ? '<div class="drawing-label">Din teckning ✨</div>' : '<div class="ai-label">AI-genererad bild</div>'}
+                                    </div>
+                                    <div class="page-text">
+                                        <p>${page.text}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                </div>
-                
-                <div style="text-align: center; margin-top: 2rem;">
-                    <button onclick="window.location.reload()" style="padding: 0.8rem 1.5rem; background: var(--accent-color); color: white; border: none; border-radius: 8px; cursor: pointer;">Skapa ny berättelse</button>
                 </div>
             </div>
         `;
