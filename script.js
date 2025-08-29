@@ -421,10 +421,8 @@ function updateProgressUI(story) {
                 step.classList.add('completed');
             });
             
-            // Show story after a moment
-            setTimeout(() => {
-                showCompletedStory(story);
-            }, 1500);
+            // Don't call showCompletedStory for mock stories - they're handled differently
+            console.log('Story marked as completed, but mock story display is handled separately');
             
         } else if (story.status === 'failed') {
             const progressMessage = document.getElementById('progress-message');
@@ -551,6 +549,7 @@ function simulateStoryGeneration(childData, uploadedFiles) {
             updateProgressUI({ status: 'completed' });
             
             setTimeout(() => {
+                // Skip the real-time story loading and show directly
                 showMockStory(mockStory, uploadedFiles);
             }, 1000);
         }, 2000);
@@ -636,13 +635,13 @@ function showMockStory(story, uploadedFiles) {
             
             <div class="story-book-viewer">
                 <div class="book-navigation">
-                    <button class="nav-arrow nav-prev" id="prev-btn" onclick="window.previousPage()" disabled>
+                    <button class="nav-arrow nav-prev" id="prev-btn" disabled>
                         ← Föregående
                     </button>
                     <div class="page-indicator">
                         <span id="current-page">1</span> av <span id="total-pages">${storyData.pages.length}</span>
                     </div>
-                    <button class="nav-arrow nav-next" id="next-btn" onclick="window.nextPage()">
+                    <button class="nav-arrow nav-next" id="next-btn">
                         Nästa →
                     </button>
                 </div>
@@ -677,6 +676,42 @@ function showMockStory(story, uploadedFiles) {
 
     mainContent.innerHTML = storyHTML;
     console.log('Mock story displayed successfully!');
+    
+    // Add event listeners after HTML is created
+    setupNavigationButtons();
+}
+
+// Setup navigation button event listeners
+function setupNavigationButtons() {
+    const prevBtn = document.getElementById('prev-btn');
+    const nextBtn = document.getElementById('next-btn');
+    
+    console.log('Setting up navigation buttons:', { prevBtn, nextBtn });
+    
+    if (prevBtn) {
+        prevBtn.addEventListener('click', function() {
+            console.log('Previous button clicked!');
+            previousPage();
+        });
+    }
+    
+    if (nextBtn) {
+        nextBtn.addEventListener('click', function() {
+            console.log('Next button clicked!');
+            nextPage();
+        });
+    }
+    
+    // Also add keyboard navigation
+    document.addEventListener('keydown', function(e) {
+        if (!window.currentStory) return;
+        
+        if (e.key === 'ArrowLeft') {
+            previousPage();
+        } else if (e.key === 'ArrowRight') {
+            nextPage();
+        }
+    });
 }
 
 // Navigation functions for book
@@ -703,26 +738,38 @@ window.nextPage = nextPage;
 window.previousPage = previousPage;
 
 function updatePageDisplay() {
-    if (!window.currentStory) return;
+    if (!window.currentStory) {
+        console.log('No current story available');
+        return;
+    }
     
     const currentPage = window.currentStory.currentPage;
     const totalPages = window.currentStory.data.pages.length;
     
+    console.log(`Updating page display: ${currentPage} of ${totalPages}`);
+    
     // Hide all pages
-    document.querySelectorAll('.book-page').forEach(page => {
+    const allPages = document.querySelectorAll('.book-page');
+    console.log('Found pages:', allPages.length);
+    allPages.forEach(page => {
         page.classList.remove('active');
     });
     
     // Show current page
     const currentPageElement = document.getElementById(`page-${currentPage}`);
+    console.log('Current page element:', currentPageElement);
     if (currentPageElement) {
         currentPageElement.classList.add('active');
+        console.log('Added active class to page', currentPage);
+    } else {
+        console.error('Could not find page element for page', currentPage);
     }
     
     // Update page indicator
     const currentPageSpan = document.getElementById('current-page');
     if (currentPageSpan) {
         currentPageSpan.textContent = currentPage;
+        console.log('Updated page indicator to', currentPage);
     }
     
     // Update navigation buttons
