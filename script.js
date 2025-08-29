@@ -629,7 +629,6 @@ function showMockStory(story, uploadedFiles) {
                 <h1>${storyData.title}</h1>
                 <p class="story-subtitle">En magisk berättelse för ${story.child_name}</p>
                 <div class="book-controls">
-                    <button onclick="printStory()" class="control-button print-btn">📖 Skriv ut bok</button>
                     <button onclick="orderStory()" class="control-button order-btn">🛒 Beställ tryckt bok</button>
                     <button onclick="createNewStory()" class="control-button new-story-btn">✨ Ny berättelse</button>
                 </div>
@@ -637,13 +636,13 @@ function showMockStory(story, uploadedFiles) {
             
             <div class="story-book-viewer">
                 <div class="book-navigation">
-                    <button class="nav-arrow nav-prev" onclick="previousPage()" disabled>
+                    <button class="nav-arrow nav-prev" id="prev-btn" onclick="window.previousPage()" disabled>
                         ← Föregående
                     </button>
                     <div class="page-indicator">
                         <span id="current-page">1</span> av <span id="total-pages">${storyData.pages.length}</span>
                     </div>
-                    <button class="nav-arrow nav-next" onclick="nextPage()">
+                    <button class="nav-arrow nav-next" id="next-btn" onclick="window.nextPage()">
                         Nästa →
                     </button>
                 </div>
@@ -682,18 +681,26 @@ function showMockStory(story, uploadedFiles) {
 
 // Navigation functions for book
 function nextPage() {
+    console.log('Next page clicked, current story:', window.currentStory);
     if (window.currentStory && window.currentStory.currentPage < window.currentStory.data.pages.length) {
         window.currentStory.currentPage++;
+        console.log('Moving to page:', window.currentStory.currentPage);
         updatePageDisplay();
     }
 }
 
 function previousPage() {
+    console.log('Previous page clicked, current story:', window.currentStory);
     if (window.currentStory && window.currentStory.currentPage > 1) {
         window.currentStory.currentPage--;
+        console.log('Moving to page:', window.currentStory.currentPage);
         updatePageDisplay();
     }
 }
+
+// Expose functions globally to ensure they're accessible from onclick handlers
+window.nextPage = nextPage;
+window.previousPage = previousPage;
 
 function updatePageDisplay() {
     if (!window.currentStory) return;
@@ -719,15 +726,17 @@ function updatePageDisplay() {
     }
     
     // Update navigation buttons
-    const prevBtn = document.querySelector('.nav-prev');
-    const nextBtn = document.querySelector('.nav-next');
+    const prevBtn = document.getElementById('prev-btn');
+    const nextBtn = document.getElementById('next-btn');
     
-    if (prevBtn) prevBtn.disabled = currentPage === 1;
-    if (nextBtn) nextBtn.disabled = currentPage === totalPages;
-}
-
-function printStory() {
-    window.print();
+    if (prevBtn) {
+        prevBtn.disabled = currentPage === 1;
+        console.log('Previous button disabled:', currentPage === 1);
+    }
+    if (nextBtn) {
+        nextBtn.disabled = currentPage === totalPages;
+        console.log('Next button disabled:', currentPage === totalPages);
+    }
 }
 
 function orderStory() {
@@ -735,6 +744,24 @@ function orderStory() {
         alert(`Fantastisk! "${window.currentStory.data.title}" för ${window.currentStory.childName} är redo att beställas som tryckt bok. Denna funktion kommer snart!`);
     }
 }
+
+function createNewStory() {
+    // Clear any stored data
+    localStorage.removeItem('sigvardsson_child');
+    localStorage.removeItem('sigvardsson_drawings');
+    
+    // Clean up current story
+    if (window.currentStory) {
+        window.currentStory = null;
+    }
+    
+    // Show the modal again
+    showStoryModal();
+}
+
+// Expose functions globally
+window.orderStory = orderStory;
+window.createNewStory = createNewStory;
 
 // Helper function to save files (for demonstration purposes)
 // In production, files would be uploaded to a server or cloud storage
