@@ -271,7 +271,7 @@ async function handleStoryForm(e) {
             return;
         }
 
-        // Prepare child data
+        // Prepare child data including new appearance fields
         const childData = {
             childName: formData.get('childName'),
             childAge: parseInt(formData.get('childAge')),
@@ -279,7 +279,10 @@ async function handleStoryForm(e) {
             favoriteFood: formData.get('favoriteFood'),
             favoriteActivity: formData.get('favoriteActivity'),
             bestMemory: formData.get('bestMemory'),
-            personality: formData.get('personality')
+            personality: formData.get('personality'),
+            gender: formData.get('gender'),
+            hairColor: formData.get('hairColor'),
+            favoriteColor: formData.get('favoriteColor')
         };
 
         // Convert files to base64 for transmission
@@ -550,7 +553,7 @@ function simulateStoryGeneration(childData, uploadedFiles) {
             
             setTimeout(() => {
                 // Skip the real-time story loading and show directly
-                showMockStory(mockStory, uploadedFiles);
+                showMockStory(mockStory, uploadedFiles, childData);
             }, 1000);
         }, 2000);
     }, 2000);
@@ -587,7 +590,7 @@ function createMockStory(childData, uploadedFiles) {
 }
 
 // SIMPLE VERSION - Show mock story with working navigation
-function showMockStory(story, uploadedFiles) {
+function showMockStory(story, uploadedFiles, childData) {
     const mainContent = document.querySelector('.main-content');
     const storyData = story.story_data;
     
@@ -597,7 +600,12 @@ function showMockStory(story, uploadedFiles) {
     window.userFiles = uploadedFiles;
     window.currentStory = {
         title: storyData.title,
-        childName: story.child_name
+        childName: story.child_name,
+        childCharacteristics: {
+            gender: childData.gender,
+            hairColor: childData.hairColor,
+            favoriteColor: childData.favoriteColor
+        }
     };
     
     // Simple display function
@@ -657,25 +665,55 @@ function showCurrentPage() {
             }
         }
         
-        // If no user drawing, generate AI image URL
+        // If no user drawing, generate AI image URL with child characteristics
         if (!imageUrl) {
+            // Get child characteristics for personalized AI images
+            const childChar = window.currentStory.childCharacteristics || {
+                gender: 'barn',
+                hairColor: 'naturlig',
+                favoriteColor: 'färgglad'
+            };
+            
+            // Translate gender for better English prompts
+            const genderTranslation = {
+                'pojke': 'boy',
+                'flicka': 'girl',
+                'annat': 'child'
+            };
+            const genderEng = genderTranslation[childChar.gender] || 'child';
+            
+            // Translate hair color for prompts
+            const hairTranslation = {
+                'ljust': 'light',
+                'blont': 'blonde',
+                'brunt': 'brown',
+                'mörkt': 'dark',
+                'rött': 'red',
+                'grått': 'gray',
+                'färgat': 'colorful'
+            };
+            const hairEng = hairTranslation[childChar.hairColor] || 'natural';
+            
+            // Create child description
+            const childDescription = `${genderEng} with ${hairEng} hair`;
+            
             const aiImagePrompts = [
-                'Cheerful children\'s book illustration showing a brave child on a magical adventure in a colorful forest',
-                'Whimsical watercolor illustration of a child discovering something wonderful while eating their favorite food',
-                'Magical children\'s book art showing a child remembering happy memories with sparkles around them',
-                'Bright illustration of a courageous child starting an adventure with magical creatures nearby',
-                'Colorful children\'s book scene showing a child meeting friendly forest animals who share food',
-                'Warm illustration depicting children learning to share and care for each other in a magical setting',
-                'Joyful children\'s book art showing kids playing and having fun together in a magical world',
-                'Inspiring illustration of a child becoming known as the kindest and bravest hero in the land',
-                'Happy children\'s book scene showing a child returning home full of joy and new friends',
-                'Magical ending illustration of a child living happily with sparkles and rainbow colors around them'
+                `Cheerful children's book illustration showing a brave ${childDescription} on a magical adventure in a colorful forest with ${childChar.favoriteColor} accents`,
+                `Whimsical watercolor illustration of a ${childDescription} discovering something wonderful while eating their favorite food, with ${childChar.favoriteColor} magical sparkles`,
+                `Magical children's book art showing a ${childDescription} remembering happy memories with ${childChar.favoriteColor} sparkles and warm light around them`,
+                `Bright illustration of a courageous ${childDescription} starting an adventure with magical creatures nearby, featuring ${childChar.favoriteColor} elements`,
+                `Colorful children's book scene showing a ${childDescription} meeting friendly forest animals who share food, with ${childChar.favoriteColor} flowers and details`,
+                `Warm illustration depicting a ${childDescription} learning to share and care for others in a magical setting with ${childChar.favoriteColor} magical elements`,
+                `Joyful children's book art showing a ${childDescription} playing and having fun together in a magical world filled with ${childChar.favoriteColor} wonder`,
+                `Inspiring illustration of a ${childDescription} becoming known as the kindest and bravest hero, surrounded by ${childChar.favoriteColor} celebratory magic`,
+                `Happy children's book scene showing a ${childDescription} returning home full of joy and new friends, with ${childChar.favoriteColor} sunset colors`,
+                `Magical ending illustration of a ${childDescription} living happily with ${childChar.favoriteColor} sparkles and rainbow colors around them`
             ];
             
-            // Generate AI image using a children's book illustration API or placeholder
+            // Generate AI image using personalized prompt
             const prompt = aiImagePrompts[window.currentPageIndex] || aiImagePrompts[0];
-            imageUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt + ', children\'s book illustration, colorful, friendly, magical, watercolor style')}/1024x1024`;
-            console.log('Using AI generated image for page', pageNum, 'with prompt:', prompt);
+            imageUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt + ', professional children\'s book illustration, watercolor style, Nordic aesthetic, clean and minimalistic, warm and inviting')}/1024x1024`;
+            console.log('Using personalized AI image for page', pageNum, 'with characteristics:', childChar);
         }
     
         const html = `
@@ -686,6 +724,17 @@ function showCurrentPage() {
                     <div class="book-controls">
                         <button onclick="orderStory()" class="control-button order-btn">🛒 Beställ tryckt bok</button>
                         <button onclick="createNewStory()" class="control-button new-story-btn">✨ Ny berättelse</button>
+                    </div>
+                </div>
+                
+                <!-- Nordic Style Loading Banner -->
+                <div class="nordic-banner">
+                    <div class="banner-content">
+                        <div class="banner-icon">✨</div>
+                        <div class="banner-text">
+                            <p class="banner-title">AI-bilder laddas</p>
+                            <p class="banner-subtitle">Ha tålamod, de magiska bilderna kommer snart</p>
+                        </div>
                     </div>
                 </div>
                 
