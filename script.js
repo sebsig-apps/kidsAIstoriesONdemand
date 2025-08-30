@@ -681,9 +681,23 @@ function showCurrentPage() {
             const childName = window.currentStory?.childName || 'child';
             const favoriteColor = window.currentStory?.childCharacteristics?.favoriteColor || 'colorful';
             
-            // Use same working approach as pig test
-            imageUrl = `https://httpbin.org/image/jpeg`;
-            console.log('Using same working URL as pig test for page', pageNum);
+            // Use working image service with story themes
+            const storyThemes = [
+                'fantasy-castle-magic',
+                'children-playing-adventure',
+                'magical-forest-fairy',
+                'happy-child-adventure',
+                'storybook-illustration',
+                'magical-creatures-friendly',
+                'children-books-reading',
+                'fairy-tale-castle',
+                'adventure-mountain-magic',
+                'happy-ending-rainbow'
+            ];
+            
+            const theme = storyThemes[window.currentPageIndex] || storyThemes[0];
+            imageUrl = `https://source.unsplash.com/400x300/?${theme},${favoriteColor}`;
+            console.log('Using story-themed image for page', pageNum, 'theme:', theme, 'color:', favoriteColor);
         }
     
         const html = `
