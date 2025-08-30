@@ -675,11 +675,38 @@ function showCurrentPage() {
             }
         }
         
-        // If no user drawing, use a working image URL
+        // If no user drawing, generate AI image URL
         if (!imageUrl) {
-            // Try different AI service or use working placeholder
-            imageUrl = `https://picsum.photos/400/300?random=${pageNum}`;
-            console.log('Using working image for page', pageNum);
+            // Get user data for personalization
+            const childName = window.currentStory?.childName || 'child';
+            const childChar = window.currentStory?.childCharacteristics || {};
+            const gender = childChar.gender === 'pojke' ? 'boy' : childChar.gender === 'flicka' ? 'girl' : 'child';
+            const favoriteColor = childChar.favoriteColor || 'colorful';
+            
+            // Use different working AI service - try Lexica
+            const prompt = `children book illustration ${gender} named ${childName} magical adventure ${favoriteColor} watercolor style`;
+            imageUrl = `https://lexica.art/api/v1/search?q=${encodeURIComponent(prompt)}`;
+            
+            // Fallback to working placeholder if AI fails
+            const fallbackUrl = `https://via.placeholder.com/400x300/667eea/ffffff?text=${encodeURIComponent(`${childName} Page ${pageNum}`)}`;
+            
+            // Try the AI service with fallback
+            fetch(imageUrl)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.images && data.images[0]) {
+                        const img = document.querySelector(`img[alt="Illustration för sida ${pageNum}"]`);
+                        if (img) img.src = data.images[0].src;
+                    }
+                })
+                .catch(() => {
+                    const img = document.querySelector(`img[alt="Illustration för sida ${pageNum}"]`);
+                    if (img) img.src = fallbackUrl;
+                });
+            
+            // Use fallback initially
+            imageUrl = fallbackUrl;
+            console.log('Using AI service with fallback for page', pageNum, 'child:', childName);
         }
     
         const html = `
