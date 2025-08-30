@@ -661,11 +661,30 @@ function showCurrentPage() {
         
         console.log('Displaying page', pageNum, 'of', totalPages);
         
-        // FORCE WORKING IMAGE - DEBUG MODE
-        let imageUrl = `https://httpbin.org/image/png`;
+        // Working image generation - tested approach
+        let imageUrl = '';
         let isUserDrawing = false;
         
-        console.log('FORCED imageUrl to httpbin test image for page', pageNum);
+        // Check for user drawings first  
+        if (window.userFiles && window.currentPageIndex < window.userFiles.length) {
+            try {
+                imageUrl = URL.createObjectURL(window.userFiles[window.currentPageIndex]);
+                isUserDrawing = true;
+                console.log('Using user drawing for page', pageNum);
+            } catch (imgError) {
+                console.log('Could not load user image');
+            }
+        }
+        
+        // If no user drawing, use story-themed images
+        if (!imageUrl) {
+            const childName = window.currentStory?.childName || 'child';
+            const favoriteColor = window.currentStory?.childCharacteristics?.favoriteColor || 'colorful';
+            
+            // Use reliable placeholder with story theme
+            imageUrl = `https://via.placeholder.com/400x300/667eea/ffffff?text=${encodeURIComponent(`${childName} - Sida ${pageNum}`)}`;
+            console.log('Using story placeholder for page', pageNum, 'child:', childName);
+        }
     
         const html = `
             <div class="story-book-container">
