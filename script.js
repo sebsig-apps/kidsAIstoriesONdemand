@@ -561,9 +561,17 @@ function simulateStoryGeneration(childData, uploadedFiles) {
 
 // Create a mock story based on user input
 function createMockStory(childData, uploadedFiles) {
+    // Set pronoun based on gender selection
+    const pronounMapping = {
+        'pojke': 'han',
+        'flicka': 'hon',
+        'annat': 'hen'
+    };
+    const pronoun = pronounMapping[childData.gender] || 'hen';
+    
     const stories = [
         `Det var en gång en ${childData.childAge}-årig hjälte vid namn ${childData.childName} som älskade att ${childData.favoriteActivity}.`,
-        `En magisk dag upptäckte ${childData.childName} något fantastiskt när hen åt sin favorit ${childData.favoriteFood}.`,
+        `En magisk dag upptäckte ${childData.childName} något fantastiskt när ${pronoun} åt sin favorit ${childData.favoriteFood}.`,
         `${childData.childName} mindes det underbara minnet: ${childData.bestMemory}.`,
         `Med mod i hjärtat och kärlek för ${childData.favoriteActivity}, begav sig ${childData.childName} ut på ett äventyr.`,
         `På vägen mötte ${childData.childName} vänliga varelser som också älskade ${childData.favoriteFood}.`,
