@@ -661,33 +661,11 @@ function showCurrentPage() {
         
         console.log('Displaying page', pageNum, 'of', totalPages);
         
-        // Get image for this page - USER DRAWINGS FIRST, THEN AI IMAGES
-        let imageUrl = '';
+        // FORCE WORKING IMAGE - DEBUG MODE
+        let imageUrl = `https://httpbin.org/image/png`;
         let isUserDrawing = false;
         
-        if (window.userFiles && window.currentPageIndex < window.userFiles.length) {
-            try {
-                imageUrl = URL.createObjectURL(window.userFiles[window.currentPageIndex]);
-                isUserDrawing = true;
-                console.log('Using user drawing for page', pageNum);
-            } catch (imgError) {
-                console.log('Could not load user image, using AI image');
-            }
-        }
-        
-        // If no user drawing, use working AI image service
-        if (!imageUrl) {
-            // Get user data for personalization
-            const childName = window.currentStory?.childName || 'child';
-            const childChar = window.currentStory?.childCharacteristics || {};
-            const gender = childChar.gender === 'pojke' ? 'boy' : childChar.gender === 'flicka' ? 'girl' : 'child';
-            const favoriteColor = childChar.favoriteColor || 'colorful';
-            
-            // Try ThisPersonDoesNotExist style service but for art
-            const prompt = `${gender} ${childName} ${favoriteColor} magical adventure`;
-            imageUrl = `https://source.unsplash.com/400x300/?children,book,illustration,${favoriteColor},magical`;
-            console.log('Using Unsplash for page', pageNum, 'with terms:', prompt);
-        }
+        console.log('FORCED imageUrl to httpbin test image for page', pageNum);
     
         const html = `
             <div class="story-book-container">
