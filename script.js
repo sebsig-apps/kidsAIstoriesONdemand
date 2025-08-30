@@ -675,23 +675,11 @@ function showCurrentPage() {
             }
         }
         
-        // If no user drawing, generate AI image URL
+        // If no user drawing, use a working image URL
         if (!imageUrl) {
-            // Test with simple working AI prompt
-            const simplePrompt = `cute child magical adventure page ${pageNum}`;
-            imageUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(simplePrompt)}/512x512`;
-            console.log('Testing AI image for page', pageNum, 'URL:', imageUrl);
-            
-            // Also add error handling for broken images
-            setTimeout(() => {
-                const img = document.querySelector(`#page-${pageNum} img`);
-                if (img) {
-                    img.onerror = function() {
-                        console.log('AI image failed, using fallback for page', pageNum);
-                        this.src = `https://via.placeholder.com/400x300/667eea/ffffff?text=AI+Error+Page+${pageNum}`;
-                    };
-                }
-            }, 100);
+            // Try different AI service or use working placeholder
+            imageUrl = `https://picsum.photos/400/300?random=${pageNum}`;
+            console.log('Using working image for page', pageNum);
         }
     
         const html = `
