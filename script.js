@@ -676,28 +676,10 @@ function showCurrentPage() {
             }
         }
         
-        // If no user drawing, use story-themed images
+        // If no user drawing, use EXACT working fox code
         if (!imageUrl) {
-            const childName = window.currentStory?.childName || 'child';
-            const favoriteColor = window.currentStory?.childCharacteristics?.favoriteColor || 'colorful';
-            
-            // Use working image service with story themes
-            const storyThemes = [
-                'fantasy-castle-magic',
-                'children-playing-adventure',
-                'magical-forest-fairy',
-                'happy-child-adventure',
-                'storybook-illustration',
-                'magical-creatures-friendly',
-                'children-books-reading',
-                'fairy-tale-castle',
-                'adventure-mountain-magic',
-                'happy-ending-rainbow'
-            ];
-            
-            const theme = storyThemes[window.currentPageIndex] || storyThemes[0];
-            imageUrl = `https://source.unsplash.com/400x300/?${theme},${favoriteColor}`;
-            console.log('Using story-themed image for page', pageNum, 'theme:', theme, 'color:', favoriteColor);
+            imageUrl = `https://httpbin.org/image/jpeg`;
+            console.log('Using EXACT working fox code for page', pageNum);
         }
     
         const html = `
