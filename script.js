@@ -675,31 +675,11 @@ function showCurrentPage() {
             }
         }
         
-        // If no user drawing, generate AI image URL
+        // If no user drawing, generate AI image URL - EXACT WORKING VERSION
         if (!imageUrl) {
-            // Get basic user data safely
-            const childName = window.currentStory?.childName || 'child';
-            const childChar = window.currentStory?.childCharacteristics || {};
-            const gender = childChar.gender === 'pojke' ? 'boy' : childChar.gender === 'flicka' ? 'girl' : 'child';
-            const favoriteColor = childChar.favoriteColor || 'colorful';
-            
-            // Simple working prompts with basic personalization
-            const simplePrompts = [
-                `children book illustration ${gender} ${childName} adventure ${favoriteColor}`,
-                `children book illustration ${gender} ${childName} eating food ${favoriteColor}`,
-                `children book illustration ${gender} ${childName} happy memories ${favoriteColor}`,
-                `children book illustration ${gender} ${childName} brave quest ${favoriteColor}`,
-                `children book illustration ${gender} ${childName} friends animals ${favoriteColor}`,
-                `children book illustration ${gender} ${childName} sharing caring ${favoriteColor}`,
-                `children book illustration ${gender} ${childName} playing together ${favoriteColor}`,
-                `children book illustration ${gender} ${childName} hero celebration ${favoriteColor}`,
-                `children book illustration ${gender} ${childName} home happy ${favoriteColor}`,
-                `children book illustration ${gender} ${childName} magical ending ${favoriteColor}`
-            ];
-            
-            const prompt = simplePrompts[window.currentPageIndex] || simplePrompts[0];
-            imageUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}/1024x1024`;
-            console.log('Using simple personalized AI image for page', pageNum, 'prompt:', prompt);
+            // Use placeholder image for now to test
+            imageUrl = `https://via.placeholder.com/400x300/667eea/ffffff?text=Sida+${pageNum}`;
+            console.log('Using placeholder image for page', pageNum);
         }
     
         const html = `
