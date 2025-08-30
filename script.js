@@ -681,9 +681,9 @@ function showCurrentPage() {
             const childName = window.currentStory?.childName || 'child';
             const favoriteColor = window.currentStory?.childCharacteristics?.favoriteColor || 'colorful';
             
-            // Use reliable placeholder with story theme
-            imageUrl = `https://via.placeholder.com/400x300/667eea/ffffff?text=${encodeURIComponent(`${childName} - Sida ${pageNum}`)}`;
-            console.log('Using story placeholder for page', pageNum, 'child:', childName);
+            // Use same working approach as pig test
+            imageUrl = `https://httpbin.org/image/jpeg`;
+            console.log('Using same working URL as pig test for page', pageNum);
         }
     
         const html = `
