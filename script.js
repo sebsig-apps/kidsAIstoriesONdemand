@@ -675,25 +675,47 @@ function showCurrentPage() {
             }
         }
         
-        // If no user drawing, generate AI image URL
+        // If no user drawing, generate AI image URL using user data
         if (!imageUrl) {
-            const aiImagePrompts = [
-                'Cheerful children\'s book illustration showing a brave child on a magical adventure in a colorful forest',
-                'Whimsical watercolor illustration of a child discovering something wonderful while eating their favorite food',
-                'Magical children\'s book art showing a child remembering happy memories with sparkles around them',
-                'Bright illustration of a courageous child starting an adventure with magical creatures nearby',
-                'Colorful children\'s book scene showing a child meeting friendly forest animals who share food',
-                'Warm illustration depicting children learning to share and care for each other in a magical setting',
-                'Joyful children\'s book art showing kids playing and having fun together in a magical world',
-                'Inspiring illustration of a child becoming known as the kindest and bravest hero in the land',
-                'Happy children\'s book scene showing a child returning home full of joy and new friends',
-                'Magical ending illustration of a child living happily with sparkles and rainbow colors around them'
+            // Get user data from the story
+            const childName = window.currentStory.childName || 'barn';
+            const childChar = window.currentStory.childCharacteristics || {};
+            const gender = childChar.gender || 'barn';
+            const hairColor = childChar.hairColor || 'naturlig';
+            const favoriteColor = childChar.favoriteColor || 'färgglad';
+            const favoriteFood = childChar.favoriteFood || 'mat';
+            const favoriteActivity = childChar.favoriteActivity || 'leka';
+            
+            // Translate to English for AI prompts
+            const genderEng = gender === 'pojke' ? 'boy' : gender === 'flicka' ? 'girl' : 'child';
+            const hairEng = {
+                'ljust': 'light blonde',
+                'blont': 'blonde', 
+                'brunt': 'brown',
+                'mörkt': 'dark',
+                'rött': 'red',
+                'grått': 'gray',
+                'färgat': 'colorful'
+            }[hairColor] || 'natural';
+            
+            // Create personalized prompts using actual user data
+            const personalizedPrompts = [
+                `Children's book illustration of a happy ${genderEng} with ${hairEng} hair named ${childName} on a magical adventure, ${favoriteColor} colors`,
+                `Whimsical illustration of ${genderEng} ${childName} with ${hairEng} hair eating delicious ${favoriteFood}, magical ${favoriteColor} sparkles`,
+                `Warm children's book art showing ${genderEng} ${childName} with ${hairEng} hair remembering happy memories, ${favoriteColor} gentle lighting`,
+                `Bright illustration of brave ${genderEng} ${childName} with ${hairEng} hair starting an adventure, ${favoriteColor} magical elements`,
+                `Colorful scene showing ${genderEng} ${childName} with ${hairEng} hair meeting friendly creatures, sharing ${favoriteFood}, ${favoriteColor} flowers`,
+                `Heartwarming illustration of ${genderEng} ${childName} with ${hairEng} hair learning to share while ${favoriteActivity}, ${favoriteColor} warm tones`,
+                `Joyful children's book art of ${genderEng} ${childName} with ${hairEng} hair ${favoriteActivity} with friends, ${favoriteColor} magical world`,
+                `Inspiring illustration of ${genderEng} ${childName} with ${hairEng} hair celebrated as hero for ${favoriteActivity}, ${favoriteColor} celebration`,
+                `Happy scene of ${genderEng} ${childName} with ${hairEng} hair returning home with friends, ${favoriteColor} sunset colors`,
+                `Magical ending with ${genderEng} ${childName} with ${hairEng} hair living happily, ${favoriteColor} sparkles and rainbow colors`
             ];
             
-            // Generate AI image using a children's book illustration API
-            const prompt = aiImagePrompts[window.currentPageIndex] || aiImagePrompts[0];
-            imageUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt + ', children\'s book illustration, colorful, friendly, magical, watercolor style')}/1024x1024`;
-            console.log('Using AI generated image for page', pageNum, 'with prompt:', prompt);
+            // Use personalized prompt for this page
+            const prompt = personalizedPrompts[window.currentPageIndex] || personalizedPrompts[0];
+            imageUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt + ', professional children\'s book illustration, watercolor style, friendly and magical')}/1024x1024`;
+            console.log('Using personalized AI image for page', pageNum, 'with user data:', {childName, gender, hairColor, favoriteColor});
         }
     
         const html = `
