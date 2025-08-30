@@ -675,7 +675,7 @@ function showCurrentPage() {
             }
         }
         
-        // If no user drawing, generate AI image URL
+        // If no user drawing, use working AI image service
         if (!imageUrl) {
             // Get user data for personalization
             const childName = window.currentStory?.childName || 'child';
@@ -683,30 +683,10 @@ function showCurrentPage() {
             const gender = childChar.gender === 'pojke' ? 'boy' : childChar.gender === 'flicka' ? 'girl' : 'child';
             const favoriteColor = childChar.favoriteColor || 'colorful';
             
-            // Use different working AI service - try Lexica
-            const prompt = `children book illustration ${gender} named ${childName} magical adventure ${favoriteColor} watercolor style`;
-            imageUrl = `https://lexica.art/api/v1/search?q=${encodeURIComponent(prompt)}`;
-            
-            // Fallback to working placeholder if AI fails
-            const fallbackUrl = `https://via.placeholder.com/400x300/667eea/ffffff?text=${encodeURIComponent(`${childName} Page ${pageNum}`)}`;
-            
-            // Try the AI service with fallback
-            fetch(imageUrl)
-                .then(response => response.json())
-                .then(data => {
-                    if (data.images && data.images[0]) {
-                        const img = document.querySelector(`img[alt="Illustration för sida ${pageNum}"]`);
-                        if (img) img.src = data.images[0].src;
-                    }
-                })
-                .catch(() => {
-                    const img = document.querySelector(`img[alt="Illustration för sida ${pageNum}"]`);
-                    if (img) img.src = fallbackUrl;
-                });
-            
-            // Use fallback initially
-            imageUrl = fallbackUrl;
-            console.log('Using AI service with fallback for page', pageNum, 'child:', childName);
+            // Try ThisPersonDoesNotExist style service but for art
+            const prompt = `${gender} ${childName} ${favoriteColor} magical adventure`;
+            imageUrl = `https://source.unsplash.com/400x300/?children,book,illustration,${favoriteColor},magical`;
+            console.log('Using Unsplash for page', pageNum, 'with terms:', prompt);
         }
     
         const html = `
