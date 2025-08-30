@@ -667,72 +667,25 @@ function showCurrentPage() {
             }
         }
         
-        // If no user drawing, generate AI image URL with child characteristics
+        // If no user drawing, generate AI image URL
         if (!imageUrl) {
-            // Get child characteristics for personalized AI images
-            const childChar = window.currentStory.childCharacteristics || {
-                gender: 'barn',
-                hairColor: 'naturlig',
-                favoriteColor: 'färgglad'
-            };
+            const aiImagePrompts = [
+                'Cheerful children\'s book illustration showing a brave child on a magical adventure in a colorful forest',
+                'Whimsical watercolor illustration of a child discovering something wonderful while eating their favorite food',
+                'Magical children\'s book art showing a child remembering happy memories with sparkles around them',
+                'Bright illustration of a courageous child starting an adventure with magical creatures nearby',
+                'Colorful children\'s book scene showing a child meeting friendly forest animals who share food',
+                'Warm illustration depicting children learning to share and care for each other in a magical setting',
+                'Joyful children\'s book art showing kids playing and having fun together in a magical world',
+                'Inspiring illustration of a child becoming known as the kindest and bravest hero in the land',
+                'Happy children\'s book scene showing a child returning home full of joy and new friends',
+                'Magical ending illustration of a child living happily with sparkles and rainbow colors around them'
+            ];
             
-            // Translate gender for better English prompts
-            const genderTranslation = {
-                'pojke': 'boy',
-                'flicka': 'girl',
-                'annat': 'child'
-            };
-            const genderEng = genderTranslation[childChar.gender] || 'child';
-            
-            // Translate hair color for prompts
-            const hairTranslation = {
-                'ljust': 'light',
-                'blont': 'blonde',
-                'brunt': 'brown',
-                'mörkt': 'dark',
-                'rött': 'red',
-                'grått': 'gray',
-                'färgat': 'colorful'
-            };
-            const hairEng = hairTranslation[childChar.hairColor] || 'natural';
-            
-            // Create child description
-            const childDescription = `${genderEng} with ${hairEng} hair`;
-            
-            // Generate AI prompt based on actual story text content
-            const storyText = page.text || '';
-            const childName = window.currentStory.childName || 'barn';
-            const favoriteFood = window.currentStory.childCharacteristics?.favoriteFood || 'mat';
-            const favoriteActivity = window.currentStory.childCharacteristics?.favoriteActivity || 'leka';
-            
-            // Create intelligent prompt based on story content
-            let contextualPrompt = '';
-            
-            if (storyText.toLowerCase().includes('åt') || storyText.toLowerCase().includes('mat') || storyText.toLowerCase().includes(favoriteFood?.toLowerCase() || 'favorit')) {
-                contextualPrompt = `${childDescription} named ${childName} eating delicious ${favoriteFood}, happy and magical scene with ${childChar.favoriteColor} elements`;
-            } else if (storyText.toLowerCase().includes('äventyr') || storyText.toLowerCase().includes('upptäckte') || storyText.toLowerCase().includes('begav')) {
-                contextualPrompt = `${childDescription} named ${childName} on a magical adventure, exploring with wonder and excitement, featuring ${childChar.favoriteColor} magical details`;
-            } else if (storyText.toLowerCase().includes('minne') || storyText.toLowerCase().includes('tillsammans') || storyText.toLowerCase().includes('kom ihåg')) {
-                contextualPrompt = `${childDescription} named ${childName} remembering happy memories, warm and nostalgic scene with ${childChar.favoriteColor} gentle lighting`;
-            } else if (storyText.toLowerCase().includes('mötte') || storyText.toLowerCase().includes('vänner') || storyText.toLowerCase().includes('varelser')) {
-                contextualPrompt = `${childDescription} named ${childName} meeting friendly magical creatures and making new friends, with ${childChar.favoriteColor} flowers and cheerful atmosphere`;
-            } else if (storyText.toLowerCase().includes('lärde') || storyText.toLowerCase().includes('dela') || storyText.toLowerCase().includes('tillsammans')) {
-                contextualPrompt = `${childDescription} named ${childName} learning and sharing with others while ${favoriteActivity}, heartwarming scene with ${childChar.favoriteColor} warm tones`;
-            } else if (storyText.toLowerCase().includes('hjälte') || storyText.toLowerCase().includes('känd') || storyText.toLowerCase().includes('modig')) {
-                contextualPrompt = `${childDescription} named ${childName} being celebrated as a hero for their skill at ${favoriteActivity}, inspiring scene with ${childChar.favoriteColor} celebration elements`;
-            } else if (storyText.toLowerCase().includes('hem') || storyText.toLowerCase().includes('kom tillbaka') || storyText.toLowerCase().includes('glädje')) {
-                contextualPrompt = `${childDescription} named ${childName} returning home happy with friends, joyful homecoming scene with ${childChar.favoriteColor} sunset colors`;
-            } else if (storyText.toLowerCase().includes('lycklig') || storyText.toLowerCase().includes('alla sina dagar') || storyText.toLowerCase().includes('redo för')) {
-                contextualPrompt = `${childDescription} named ${childName} living happily ever after, magical ending scene with ${childChar.favoriteColor} sparkles and rainbow colors`;
-            } else {
-                // Fallback: generic magical scene
-                contextualPrompt = `${childDescription} named ${childName} in a magical children's book scene related to: "${storyText.substring(0, 50)}...", with ${childChar.favoriteColor} magical elements`;
-            }
-            
-            // Simple working AI image generation
-            const simplePrompt = `children's book illustration ${childDescription} ${childChar.favoriteColor} page${pageNum}`;
-            imageUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(simplePrompt)}/1024x1024`;
-            console.log('Using simple AI image for page', pageNum);
+            // Generate AI image using a children's book illustration API
+            const prompt = aiImagePrompts[window.currentPageIndex] || aiImagePrompts[0];
+            imageUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt + ', children\'s book illustration, colorful, friendly, magical, watercolor style')}/1024x1024`;
+            console.log('Using AI generated image for page', pageNum, 'with prompt:', prompt);
         }
     
         const html = `
