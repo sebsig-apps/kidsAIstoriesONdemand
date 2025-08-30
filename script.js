@@ -675,11 +675,23 @@ function showCurrentPage() {
             }
         }
         
-        // If no user drawing, generate AI image URL - EXACT WORKING VERSION
+        // If no user drawing, generate AI image URL
         if (!imageUrl) {
-            // Use placeholder image for now to test
-            imageUrl = `https://via.placeholder.com/400x300/667eea/ffffff?text=Sida+${pageNum}`;
-            console.log('Using placeholder image for page', pageNum);
+            // Test with simple working AI prompt
+            const simplePrompt = `cute child magical adventure page ${pageNum}`;
+            imageUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(simplePrompt)}/512x512`;
+            console.log('Testing AI image for page', pageNum, 'URL:', imageUrl);
+            
+            // Also add error handling for broken images
+            setTimeout(() => {
+                const img = document.querySelector(`#page-${pageNum} img`);
+                if (img) {
+                    img.onerror = function() {
+                        console.log('AI image failed, using fallback for page', pageNum);
+                        this.src = `https://via.placeholder.com/400x300/667eea/ffffff?text=AI+Error+Page+${pageNum}`;
+                    };
+                }
+            }, 100);
         }
     
         const html = `
