@@ -675,47 +675,31 @@ function showCurrentPage() {
             }
         }
         
-        // If no user drawing, generate AI image URL using user data
+        // If no user drawing, generate AI image URL
         if (!imageUrl) {
-            // Get user data from the story
-            const childName = window.currentStory.childName || 'barn';
-            const childChar = window.currentStory.childCharacteristics || {};
-            const gender = childChar.gender || 'barn';
-            const hairColor = childChar.hairColor || 'naturlig';
-            const favoriteColor = childChar.favoriteColor || 'färgglad';
-            const favoriteFood = childChar.favoriteFood || 'mat';
-            const favoriteActivity = childChar.favoriteActivity || 'leka';
+            // Get basic user data safely
+            const childName = window.currentStory?.childName || 'child';
+            const childChar = window.currentStory?.childCharacteristics || {};
+            const gender = childChar.gender === 'pojke' ? 'boy' : childChar.gender === 'flicka' ? 'girl' : 'child';
+            const favoriteColor = childChar.favoriteColor || 'colorful';
             
-            // Translate to English for AI prompts
-            const genderEng = gender === 'pojke' ? 'boy' : gender === 'flicka' ? 'girl' : 'child';
-            const hairEng = {
-                'ljust': 'light blonde',
-                'blont': 'blonde', 
-                'brunt': 'brown',
-                'mörkt': 'dark',
-                'rött': 'red',
-                'grått': 'gray',
-                'färgat': 'colorful'
-            }[hairColor] || 'natural';
-            
-            // Create personalized prompts using actual user data
-            const personalizedPrompts = [
-                `Children's book illustration of a happy ${genderEng} with ${hairEng} hair named ${childName} on a magical adventure, ${favoriteColor} colors`,
-                `Whimsical illustration of ${genderEng} ${childName} with ${hairEng} hair eating delicious ${favoriteFood}, magical ${favoriteColor} sparkles`,
-                `Warm children's book art showing ${genderEng} ${childName} with ${hairEng} hair remembering happy memories, ${favoriteColor} gentle lighting`,
-                `Bright illustration of brave ${genderEng} ${childName} with ${hairEng} hair starting an adventure, ${favoriteColor} magical elements`,
-                `Colorful scene showing ${genderEng} ${childName} with ${hairEng} hair meeting friendly creatures, sharing ${favoriteFood}, ${favoriteColor} flowers`,
-                `Heartwarming illustration of ${genderEng} ${childName} with ${hairEng} hair learning to share while ${favoriteActivity}, ${favoriteColor} warm tones`,
-                `Joyful children's book art of ${genderEng} ${childName} with ${hairEng} hair ${favoriteActivity} with friends, ${favoriteColor} magical world`,
-                `Inspiring illustration of ${genderEng} ${childName} with ${hairEng} hair celebrated as hero for ${favoriteActivity}, ${favoriteColor} celebration`,
-                `Happy scene of ${genderEng} ${childName} with ${hairEng} hair returning home with friends, ${favoriteColor} sunset colors`,
-                `Magical ending with ${genderEng} ${childName} with ${hairEng} hair living happily, ${favoriteColor} sparkles and rainbow colors`
+            // Simple working prompts with basic personalization
+            const simplePrompts = [
+                `children book illustration ${gender} ${childName} adventure ${favoriteColor}`,
+                `children book illustration ${gender} ${childName} eating food ${favoriteColor}`,
+                `children book illustration ${gender} ${childName} happy memories ${favoriteColor}`,
+                `children book illustration ${gender} ${childName} brave quest ${favoriteColor}`,
+                `children book illustration ${gender} ${childName} friends animals ${favoriteColor}`,
+                `children book illustration ${gender} ${childName} sharing caring ${favoriteColor}`,
+                `children book illustration ${gender} ${childName} playing together ${favoriteColor}`,
+                `children book illustration ${gender} ${childName} hero celebration ${favoriteColor}`,
+                `children book illustration ${gender} ${childName} home happy ${favoriteColor}`,
+                `children book illustration ${gender} ${childName} magical ending ${favoriteColor}`
             ];
             
-            // Use personalized prompt for this page
-            const prompt = personalizedPrompts[window.currentPageIndex] || personalizedPrompts[0];
-            imageUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt + ', professional children\'s book illustration, watercolor style, friendly and magical')}/1024x1024`;
-            console.log('Using personalized AI image for page', pageNum, 'with user data:', {childName, gender, hairColor, favoriteColor});
+            const prompt = simplePrompts[window.currentPageIndex] || simplePrompts[0];
+            imageUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}/1024x1024`;
+            console.log('Using simple personalized AI image for page', pageNum, 'prompt:', prompt);
         }
     
         const html = `
