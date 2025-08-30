@@ -729,9 +729,11 @@ function showCurrentPage() {
                 contextualPrompt = `${childDescription} named ${childName} in a magical children's book scene related to: "${storyText.substring(0, 50)}...", with ${childChar.favoriteColor} magical elements`;
             }
             
+            // Add page-specific seed to ensure unique images for each page
+            const uniqueSeed = `page${pageNum}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
             const prompt = `Professional children's book illustration: ${contextualPrompt}`;
-            imageUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt + ', professional children\'s book illustration, watercolor style, Nordic aesthetic, clean and minimalistic, warm and inviting')}/1024x1024`;
-            console.log('Using personalized AI image for page', pageNum, 'with characteristics:', childChar);
+            imageUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt + ', professional children\'s book illustration, watercolor style, Nordic aesthetic, clean and minimalistic, warm and inviting')}/1024x1024?seed=${uniqueSeed}`;
+            console.log('Using unique personalized AI image for page', pageNum, 'with seed:', uniqueSeed);
         }
     
         const html = `
@@ -752,6 +754,7 @@ function showCurrentPage() {
                         <div class="banner-text">
                             <p class="banner-title">AI-bilder laddas</p>
                             <p class="banner-subtitle">Ha tålamod, de magiska bilderna kommer snart</p>
+                            <p class="banner-disclaimer">AI-genererade svar kan vara felaktiga. Din feedback är viktig.</p>
                         </div>
                     </div>
                 </div>
