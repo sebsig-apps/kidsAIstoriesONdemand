@@ -729,10 +729,10 @@ function showCurrentPage() {
                 contextualPrompt = `${childDescription} named ${childName} in a magical children's book scene related to: "${storyText.substring(0, 50)}...", with ${childChar.favoriteColor} magical elements`;
             }
             
-            // Make each prompt unique by adding page-specific details
-            const uniquePrompt = `Professional children's book illustration: ${contextualPrompt}, page ${pageNum} of 10, unique scene ${Math.random().toString(36).substr(2, 5)}`;
-            imageUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(uniquePrompt + ', professional children\'s book illustration, watercolor style, Nordic aesthetic, clean and minimalistic, warm and inviting')}/1024x1024`;
-            console.log('Using unique personalized AI image for page', pageNum, 'with unique prompt');
+            // Simple working AI image generation
+            const simplePrompt = `children's book illustration ${childDescription} ${childChar.favoriteColor} page${pageNum}`;
+            imageUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(simplePrompt)}/1024x1024`;
+            console.log('Using simple AI image for page', pageNum);
         }
     
         const html = `
