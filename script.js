@@ -676,10 +676,13 @@ function showCurrentPage() {
             }
         }
         
-        // If no user drawing, use EXACT working fox code
+        // If no user drawing, use working image with page variation
         if (!imageUrl) {
-            imageUrl = `https://httpbin.org/image/jpeg`;
-            console.log('Using EXACT working fox code for page', pageNum);
+            // Very small change: different image per page
+            const imageTypes = ['jpeg', 'png', 'webp'];
+            const imageType = imageTypes[pageNum % 3];
+            imageUrl = `https://httpbin.org/image/${imageType}`;
+            console.log('Using working image type', imageType, 'for page', pageNum);
         }
     
         const html = `
