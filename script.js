@@ -83,6 +83,7 @@ window.onclick = function(event) {
     const loginModal = document.getElementById('loginModal');
     const signupModal = document.getElementById('signupModal');
     const storyModal = document.getElementById('storyModal');
+    const bookOrderModal = document.getElementById('bookOrderModal');
     
     if (event.target == loginModal) {
         loginModal.style.display = 'none';
@@ -92,6 +93,9 @@ window.onclick = function(event) {
     }
     if (event.target == storyModal) {
         storyModal.style.display = 'none';
+    }
+    if (event.target == bookOrderModal) {
+        bookOrderModal.style.display = 'none';
     }
 }
 
@@ -651,9 +655,406 @@ function showMockStory(story, uploadedFiles, childData) {
 
 // Order story function
 function orderStory() {
+    showBookOrderModal();
+}
+
+// Show book ordering modal
+function showBookOrderModal() {
+    document.getElementById('bookOrderModal').style.display = 'block';
+    loadPrintfulOptions();
+}
+
+// Hide book ordering modal
+function hideBookOrderModal() {
+    document.getElementById('bookOrderModal').style.display = 'none';
+}
+
+// Demo mode flag - set to true for testing, false for production
+const DEMO_MODE = true;
+
+// Load Printful product options with real product images
+function loadPrintfulOptions() {
+    const bookOptions = [
+        {
+            id: 'hardcover-8x8',
+            printfulId: '532', // Printful Product ID for 8"x8" Hardcover Photo Book
+            name: 'Premium Hardcover',
+            size: '8" × 8" Square',
+            pages: '10 pages',
+            description: 'Durable hardcover with premium glossy paper. Perfect for display!',
+            price: 18.99,
+            shipping: 8.50,
+            total: 27.49,
+            deliveryTime: '7-12 business days',
+            features: ['Lay-flat binding', 'Premium paper', 'Glossy cover', 'Durable'],
+            recommended: true,
+            // Product demonstration images
+            images: {
+                main: 'https://picsum.photos/300/300?random=1',
+                flat: 'https://picsum.photos/400/200?random=2',
+                mockup: 'https://picsum.photos/300/400?random=3'
+            }
+        },
+        {
+            id: 'softcover-8x8',
+            printfulId: '530', // Printful Product ID for 8"x8" Softcover Photo Book  
+            name: 'Quality Softcover',
+            size: '8" × 8" Square', 
+            pages: '10 pages',
+            description: 'Flexible softcover with high-quality matte paper. Great value!',
+            price: 12.99,
+            shipping: 8.50,
+            total: 21.49,
+            deliveryTime: '7-12 business days',
+            features: ['Flexible cover', 'Quality paper', 'Matte finish', 'Lightweight'],
+            recommended: false,
+            images: {
+                main: 'https://picsum.photos/300/300?random=4',
+                flat: 'https://picsum.photos/400/200?random=5',
+                mockup: 'https://picsum.photos/300/400?random=6'
+            }
+        },
+        {
+            id: 'magazine-a4',
+            printfulId: '515', // Printful Product ID for Saddle Stitched Booklet
+            name: 'Magazine Style',
+            size: 'A4 Portrait',
+            pages: '10 pages',
+            description: 'Modern magazine-style booklet. Contemporary and affordable!',
+            price: 8.99,
+            shipping: 6.50,
+            total: 15.49,
+            deliveryTime: '5-10 business days',
+            features: ['Saddle-stitched', 'Glossy finish', 'Modern style', 'Budget-friendly'],
+            recommended: false,
+            images: {
+                main: 'https://picsum.photos/300/400?random=7',
+                flat: 'https://picsum.photos/500/250?random=8', 
+                mockup: 'https://picsum.photos/300/400?random=9'
+            }
+        }
+    ];
+    
+    renderBookOptions(bookOptions);
+}
+
+// Render book options in the modal
+function renderBookOptions(options) {
+    const container = document.getElementById('bookOptionsContainer');
     const childName = window.currentStory.childName || 'ditt barn';
     const title = window.currentStory.title || 'Magisk Berättelse';
-    alert(`Fantastisk! "${title}" för ${childName} är redo att beställas som tryckt bok. Denna funktion kommer snart!`);
+    
+    container.innerHTML = `
+        <div class="book-order-header">
+            <h2>📚 Beställ Fysisk Bok</h2>
+            <p class="book-title">"${title}" för ${childName}</p>
+            <p class="delivery-info">🚚 Leverans till Sverige • Tryck på beställning</p>
+        </div>
+        
+        <div class="book-options">
+            ${options.map(option => `
+                <div class="book-option ${option.recommended ? 'recommended' : ''}" data-option-id="${option.id}">
+                    ${option.recommended ? '<div class="recommended-badge">⭐ Rekommenderad</div>' : ''}
+                    <div class="book-option-content">
+                        <div class="book-preview">
+                            <div class="book-image" onclick="showProductImages('${option.id}')">
+                                <img src="${option.images?.main || 'https://httpbin.org/image/png'}" 
+                                     alt="${option.name}" 
+                                     loading="lazy"
+                                     onerror="this.src='https://httpbin.org/image/png'"
+                                     class="product-image">
+                                <div class="image-overlay">
+                                    <span class="view-details">Se detaljer</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="book-details">
+                            <h3>${option.name}</h3>
+                            <p class="book-specs">${option.size} • ${option.pages}</p>
+                            <p class="book-description">${option.description}</p>
+                            <div class="book-features">
+                                ${option.features.map(feature => `<span class="feature-tag">${feature}</span>`).join('')}
+                            </div>
+                        </div>
+                        <div class="book-pricing">
+                            <div class="price-breakdown">
+                                <div class="price-line">
+                                    <span>Bok:</span>
+                                    <span>${option.price}€</span>
+                                </div>
+                                <div class="price-line">
+                                    <span>Frakt:</span>
+                                    <span>${option.shipping}€</span>
+                                </div>
+                                <div class="price-line total">
+                                    <span><strong>Totalt:</strong></span>
+                                    <span><strong>${option.total}€</strong></span>
+                                </div>
+                            </div>
+                            <div class="delivery-time">${option.deliveryTime}</div>
+                            <button class="select-book-btn" onclick="selectBookOption('${option.id}', ${option.total})">
+                                Välj Denna Bok
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `).join('')}
+        </div>
+        
+        ${DEMO_MODE ? `
+            <div class="demo-notice">
+                <p>🧪 <strong>Demo-läge:</strong> Detta är endast en förhandsvisning. Inga verkliga beställningar kommer att göras.</p>
+            </div>
+        ` : ''}
+        
+        <div class="modal-actions">
+            <button onclick="hideBookOrderModal()" class="secondary-button">Stäng</button>
+        </div>
+    `;
+}
+
+// Select a book option
+function selectBookOption(optionId, total) {
+    if (DEMO_MODE) {
+        showDemoOrderConfirmation(optionId, total);
+    } else {
+        // Real order processing would go here
+        processRealOrder(optionId, total);
+    }
+}
+
+// Show demo order confirmation
+function showDemoOrderConfirmation(optionId, total) {
+    const childName = window.currentStory.childName || 'ditt barn';
+    const title = window.currentStory.title || 'Magisk Berättelse';
+    
+    const confirmationHTML = `
+        <div class="demo-confirmation">
+            <div class="success-icon">✅</div>
+            <h2>Demo Beställning Simulerad!</h2>
+            <p>I produktionsläge skulle detta skapa en riktig beställning för:</p>
+            
+            <div class="order-summary">
+                <h3>"${title}"</h3>
+                <p>För: ${childName}</p>
+                <p>Bokformat: ${optionId}</p>
+                <p>Total kostnad: ${total}€</p>
+                <p>Leverans till Sverige: 7-12 arbetsdagar</p>
+            </div>
+            
+            <p class="demo-note">
+                🔧 <strong>Nästa steg:</strong> Integrera med Printful API för riktiga beställningar
+            </p>
+            
+            <button onclick="hideBookOrderModal()" class="primary-button">
+                Stäng Demo
+            </button>
+        </div>
+    `;
+    
+    document.getElementById('bookOptionsContainer').innerHTML = confirmationHTML;
+}
+
+// Process real order (for production)
+async function processRealOrder(optionId, total) {
+    try {
+        console.log('Processing real order:', optionId, total);
+        
+        // Step 1: Generate PDF from story pages
+        const pdfBlob = await generateStoryPDF();
+        
+        // Step 2: Upload PDF to Printful
+        const uploadResponse = await uploadPDFToPrintful(pdfBlob, optionId);
+        
+        // Step 3: Create order
+        const order = await createPrintfulOrder(uploadResponse.fileId, optionId, total);
+        
+        // Step 4: Show success
+        showOrderSuccess(order);
+        
+    } catch (error) {
+        console.error('Order processing error:', error);
+        alert('Order processing failed: ' + error.message);
+    }
+}
+
+// Generate PDF from current story pages
+async function generateStoryPDF() {
+    const storyPages = window.storyPages || [];
+    const childName = window.currentStory?.childName || 'Child';
+    const storyTitle = window.currentStory?.title || 'Story';
+    
+    // This would use a PDF library like jsPDF or PDFKit
+    // For demo purposes, we'll simulate PDF generation
+    console.log('Generating PDF for:', storyTitle);
+    console.log('Pages to include:', storyPages.length);
+    
+    // In production, you would:
+    // 1. Create PDF document
+    // 2. Add cover page with title
+    // 3. For each story page:
+    //    - Add the AI-generated or user image
+    //    - Add the story text below
+    // 4. Return PDF blob
+    
+    const mockPdfContent = `PDF Content for "${storyTitle}" by ${childName}`;
+    return new Blob([mockPdfContent], { type: 'application/pdf' });
+}
+
+// Upload PDF to Printful
+async function uploadPDFToPrintful(pdfBlob, productType) {
+    console.log('Uploading PDF to Printful for product:', productType);
+    
+    // In production, this would make a real API call:
+    /*
+    const formData = new FormData();
+    formData.append('file', pdfBlob, 'storybook.pdf');
+    
+    const response = await fetch('https://api.printful.com/files', {
+        method: 'POST',
+        headers: {
+            'Authorization': 'Bearer YOUR_PRINTFUL_API_TOKEN'
+        },
+        body: formData
+    });
+    
+    return await response.json();
+    */
+    
+    // Mock response for demo
+    return {
+        fileId: 'mock-file-' + Date.now(),
+        url: 'https://printful.com/files/mock-file.pdf'
+    };
+}
+
+// Create order in Printful
+async function createPrintfulOrder(fileId, productType, total) {
+    console.log('Creating Printful order:', fileId, productType, total);
+    
+    // In production, this would create a real order:
+    /*
+    const orderData = {
+        recipient: {
+            name: userAddress.name,
+            address1: userAddress.street,
+            city: userAddress.city,
+            country_code: 'SE',
+            zip: userAddress.postalCode
+        },
+        items: [{
+            sync_variant_id: getProductVariantId(productType),
+            quantity: 1,
+            files: [{
+                url: fileUrl
+            }]
+        }]
+    };
+    
+    const response = await fetch('https://api.printful.com/orders', {
+        method: 'POST',
+        headers: {
+            'Authorization': 'Bearer YOUR_PRINTFUL_API_TOKEN',
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(orderData)
+    });
+    
+    return await response.json();
+    */
+    
+    // Mock response for demo
+    return {
+        orderId: 'PF-' + Date.now(),
+        status: 'pending',
+        estimatedDelivery: '7-12 business days'
+    };
+}
+
+// Show order success message
+function showOrderSuccess(order) {
+    const successHTML = `
+        <div class="order-success">
+            <div class="success-icon">🎉</div>
+            <h2>Order Placed Successfully!</h2>
+            <div class="order-details">
+                <p><strong>Order ID:</strong> ${order.orderId}</p>
+                <p><strong>Status:</strong> ${order.status}</p>
+                <p><strong>Estimated Delivery:</strong> ${order.estimatedDelivery}</p>
+            </div>
+            <p>You will receive email updates about your order status.</p>
+            <button onclick="hideBookOrderModal()" class="primary-button">
+                Close
+            </button>
+        </div>
+    `;
+    
+    document.getElementById('bookOptionsContainer').innerHTML = successHTML;
+}
+
+// Show product images in larger view
+function showProductImages(optionId) {
+    const bookOptions = [
+        {
+            id: 'hardcover-8x8',
+            name: 'Premium Hardcover',
+            images: {
+                main: 'https://picsum.photos/300/300?random=1',
+                flat: 'https://picsum.photos/400/200?random=2',
+                mockup: 'https://picsum.photos/300/400?random=3'
+            }
+        },
+        {
+            id: 'softcover-8x8',
+            name: 'Quality Softcover',
+            images: {
+                main: 'https://picsum.photos/300/300?random=4',
+                flat: 'https://picsum.photos/400/200?random=5',
+                mockup: 'https://picsum.photos/300/400?random=6'
+            }
+        },
+        {
+            id: 'magazine-a4',
+            name: 'Magazine Style',
+            images: {
+                main: 'https://picsum.photos/300/400?random=7',
+                flat: 'https://picsum.photos/500/250?random=8', 
+                mockup: 'https://picsum.photos/300/400?random=9'
+            }
+        }
+    ];
+    
+    const option = bookOptions.find(opt => opt.id === optionId);
+    if (!option) return;
+    
+    const imageGalleryHTML = `
+        <div class="product-image-gallery">
+            <h3>${option.name} - Produktbilder</h3>
+            <div class="image-grid">
+                <div class="gallery-item">
+                    <img src="${option.images.main}" alt="Produktbild" loading="lazy">
+                    <p>Produktbild</p>
+                </div>
+                <div class="gallery-item">
+                    <img src="${option.images.flat}" alt="Platt vy" loading="lazy">
+                    <p>Platt vy</p>
+                </div>
+                <div class="gallery-item">
+                    <img src="${option.images.mockup}" alt="Mockup" loading="lazy">
+                    <p>I miljö</p>
+                </div>
+            </div>
+            <div class="gallery-note">
+                <p>📸 <strong>Dessa bilder visar det faktiska produkten du kommer att få från Printful</strong></p>
+                <p>Din egen berättelse och bilder kommer att tryckas på denna boktyp.</p>
+            </div>
+            <button onclick="loadPrintfulOptions()" class="primary-button">
+                ← Tillbaka till bokval
+            </button>
+        </div>
+    `;
+    
+    document.getElementById('bookOptionsContainer').innerHTML = imageGalleryHTML;
 }
 
 // Create new story function
