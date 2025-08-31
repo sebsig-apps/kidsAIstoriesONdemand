@@ -263,20 +263,23 @@
                 </div>
 
                 <div class="payment-form-section">
-                    <div class="payment-methods-tabs">
-                        <button class="payment-tab active" onclick="switchPaymentTab('card')">
-                            💳 Kort
-                        </button>
-                        <button class="payment-tab" onclick="switchPaymentTab('apple-pay')">
-                            🍎 Apple Pay
-                        </button>
-                        <button class="payment-tab" onclick="switchPaymentTab('google-pay')">
-                            📱 Google Pay
-                        </button>
+                    <div class="payment-left-column">
+                        <div class="payment-methods-tabs">
+                            <button class="payment-tab active" onclick="switchPaymentTab('card')">
+                                💳 Kort
+                            </button>
+                            <button class="payment-tab" onclick="switchPaymentTab('apple-pay')">
+                                🍎 Apple Pay
+                            </button>
+                            <button class="payment-tab" onclick="switchPaymentTab('google-pay')">
+                                📱 Google Pay
+                            </button>
+                        </div>
                     </div>
 
-                    <!-- Card Payment Form -->
-                    <div id="card-payment" class="payment-method-form active">
+                    <div class="payment-right-column">
+                        <!-- Card Payment Form -->
+                        <div id="card-payment" class="payment-method-form active">
                         <form id="payment-form">
                             <div class="form-group">
                                 <label for="customer-email">E-postadress *</label>
@@ -347,19 +350,20 @@
                                 <div id="payment-spinner" class="spinner hidden"></div>
                             </button>
                         </form>
-                    </div>
-
-                    <!-- Apple Pay -->
-                    <div id="apple-pay" class="payment-method-form">
-                        <div id="apple-pay-button" class="apple-pay-button-container">
-                            <!-- Apple Pay button will be inserted here -->
                         </div>
-                    </div>
 
-                    <!-- Google Pay -->
-                    <div id="google-pay" class="payment-method-form">
-                        <div id="google-pay-button" class="google-pay-button-container">
-                            <!-- Google Pay button will be inserted here -->
+                        <!-- Apple Pay -->
+                        <div id="apple-pay" class="payment-method-form">
+                            <div id="apple-pay-button" class="apple-pay-button-container">
+                                <!-- Apple Pay button will be inserted here -->
+                            </div>
+                        </div>
+
+                        <!-- Google Pay -->
+                        <div id="google-pay" class="payment-method-form">
+                            <div id="google-pay-button" class="google-pay-button-container">
+                                <!-- Google Pay button will be inserted here -->
+                            </div>
                         </div>
                     </div>
                 </div>

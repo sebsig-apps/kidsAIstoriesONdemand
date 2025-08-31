@@ -940,10 +940,6 @@ body {
     padding: 1.5rem;
     margin-bottom: 2rem;
     border: 2px solid var(--border-color);
-    display: grid;
-    grid-template-columns: 1fr auto;
-    gap: 2rem;
-    align-items: start;
 }
 
 .book-info h3 {
@@ -958,11 +954,9 @@ body {
 }
 
 .price-summary {
-    min-width: 200px;
-    padding: 1rem;
-    background: white;
-    border-radius: 8px;
-    border: 1px solid var(--border-color);
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--border-color);
 }
 
 .price-line {
@@ -981,11 +975,24 @@ body {
 
 .payment-form-section {
     margin-bottom: 2rem;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 3rem;
+    align-items: start;
+}
+
+.payment-left-column {
+    /* Order summary and payment tabs will go here */
+}
+
+.payment-right-column {
+    /* Payment form will go here */
+    max-width: 400px;
 }
 
 .payment-methods-tabs {
     display: flex;
-    margin-bottom: 2rem;
+    margin-bottom: 1.5rem;
     border-bottom: 2px solid var(--border-color);
 }
 
@@ -1045,12 +1052,14 @@ body {
 .form-group input,
 .form-group select {
     width: 100%;
+    max-width: 400px;
     padding: 0.8rem;
     border: 2px solid var(--border-color);
     border-radius: 8px;
     font-size: 1rem;
     transition: border-color 0.3s ease;
     background: white;
+    box-sizing: border-box;
 }
 
 .form-group input:focus,
@@ -1081,6 +1090,7 @@ body {
     display: flex;
     gap: 0.5rem;
     margin-bottom: 0.5rem;
+    max-width: 400px;
 }
 
 .demo-card-input {
@@ -1159,6 +1169,7 @@ body {
 
 .payment-button {
     width: 100%;
+    max-width: 400px;
     background: linear-gradient(135deg, var(--primary-color) 0%, var(--accent-color) 100%);
     color: white;
     border: none;
@@ -1333,13 +1344,26 @@ body {
 
 /* Responsive design for payment modal */
 @media (max-width: 1024px) {
-    .order-summary-payment {
+    .payment-form-section {
         grid-template-columns: 1fr;
-        gap: 1rem;
+        gap: 2rem;
     }
     
-    .price-summary {
-        min-width: auto;
+    .payment-right-column {
+        max-width: none;
+    }
+    
+    .form-group input,
+    .form-group select {
+        max-width: none;
+    }
+    
+    .card-input-row {
+        max-width: none;
+    }
+    
+    .payment-button {
+        max-width: none;
     }
 }
 
