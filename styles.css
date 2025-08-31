@@ -900,10 +900,11 @@ body {
 /* ===== STRIPE PAYMENT MODAL STYLES ===== */
 
 .stripe-payment-modal {
-    max-width: 600px;
+    max-width: 800px;
     max-height: 95vh;
     overflow-y: auto;
     border-radius: 16px;
+    width: 90vw;
 }
 
 .payment-header {
@@ -939,6 +940,10 @@ body {
     padding: 1.5rem;
     margin-bottom: 2rem;
     border: 2px solid var(--border-color);
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 2rem;
+    align-items: start;
 }
 
 .book-info h3 {
@@ -953,9 +958,11 @@ body {
 }
 
 .price-summary {
-    margin-top: 1rem;
-    padding-top: 1rem;
-    border-top: 1px solid var(--border-color);
+    min-width: 200px;
+    padding: 1rem;
+    background: white;
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
 }
 
 .price-line {
@@ -1325,10 +1332,22 @@ body {
 }
 
 /* Responsive design for payment modal */
+@media (max-width: 1024px) {
+    .order-summary-payment {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+    
+    .price-summary {
+        min-width: auto;
+    }
+}
+
 @media (max-width: 768px) {
     .stripe-payment-modal {
-        max-width: 95%;
-        margin: 2% auto;
+        max-width: 98%;
+        margin: 1% auto;
+        width: 98vw;
     }
     
     .payment-methods-tabs {
@@ -1358,5 +1377,33 @@ body {
     
     .success-actions {
         flex-direction: column;
+    }
+    
+    .order-summary-payment {
+        padding: 1rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .stripe-payment-modal {
+        width: 100vw;
+        max-width: 100%;
+        margin: 0;
+        border-radius: 0;
+        height: 100vh;
+        max-height: 100vh;
+    }
+    
+    .payment-header h2 {
+        font-size: 1.4rem;
+    }
+    
+    .form-group {
+        margin-bottom: 1rem;
+    }
+    
+    .test-cards-info {
+        margin: 1rem 0;
+        padding: 1rem;
     }
 }
