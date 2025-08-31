@@ -13,6 +13,9 @@ interface ChildData {
   favoriteActivity: string
   bestMemory: string
   personality?: string
+  gender?: string
+  hairColor?: string
+  favoriteColor?: string
 }
 
 interface DrawingData {
@@ -100,6 +103,9 @@ serve(async (req) => {
         favorite_activity: childData.favoriteActivity,
         best_memory: childData.bestMemory,
         personality: childData.personality,
+        gender: childData.gender,
+        hair_color: childData.hairColor,
+        favorite_color: childData.favoriteColor,
         status: 'processing'
       })
       .select()
@@ -382,14 +388,29 @@ async function generateMissingImages(
   
   for (const page of pagesToGenerate) {
     try {
+      // Map Swedish characteristics to English for AI prompt
+      const genderMap = { 'pojke': 'boy', 'flicka': 'girl', 'annat': 'child' };
+      const hairColorMap = { 
+        'blont': 'blonde hair', 'brunt': 'brown hair', 'svart': 'black hair', 
+        'rött': 'red hair', 'ljusbrunt': 'light brown hair', 'mörkt': 'dark hair' 
+      };
+      const favoriteColorMap = {
+        'röd': 'red', 'blå': 'blue', 'grön': 'green', 'gul': 'yellow',
+        'rosa': 'pink', 'lila': 'purple', 'orange': 'orange'
+      };
+      
+      const gender = genderMap[childData.gender || ''] || 'child';
+      const hairColor = hairColorMap[childData.hairColor || ''] || 'hair';
+      const favoriteColor = favoriteColorMap[childData.favoriteColor || ''] || 'colorful';
+
       const enhancedPrompt = `Professional children's book illustration in watercolor and digital art style: ${page.imagePrompt}
 
-Main character: A happy, friendly ${childData.childAge}-year-old child named ${childData.childName}
-Art style: Bright, cheerful, whimsical children's book illustration with soft edges
-Colors: Warm, vibrant, family-friendly palette with magical touches
+Main character: A happy, friendly ${childData.childAge}-year-old ${gender} named ${childData.childName} with ${hairColor}, wearing ${favoriteColor} clothes
+Art style: Bright, cheerful, whimsical children's book illustration with soft edges  
+Colors: Warm, vibrant, family-friendly palette with magical touches, prominently featuring ${favoriteColor}
 Quality: Professional children's book illustration, high resolution, publication ready
 Mood: Joyful, magical, safe, and inspiring - perfect for young children
-Details: Include magical sparkles or gentle fantasy elements, avoid any scary or dark themes`
+Details: Include magical sparkles or gentle fantasy elements, personalized for ${childData.childName}, avoid any scary or dark themes`
 
       // Generate image with DALL-E 3
       const imageResponse = await fetch('https://api.openai.com/v1/images/generations', {

@@ -588,11 +588,28 @@ function createMockStory(childData, uploadedFiles) {
         child_name: childData.childName,
         story_data: {
             title: `${childData.childName}s Magiska Äventyr`,
-            pages: stories.map((text, index) => ({
-                page: index + 1,
-                text: text,
-                imagePrompt: `Children's book illustration showing ${childData.childName} in a magical adventure`
-            }))
+            pages: stories.map((text, index) => {
+                const pageNumber = index + 1;
+                // Create unique image prompts for each page based on the story content
+                const pageSpecificPrompts = [
+                    `${childData.childName} as a brave hero, age ${childData.childAge}, discovering ${childData.favoriteActivity}`,
+                    `${childData.childName} having a magical moment with their favorite ${childData.favoriteFood}`,
+                    `${childData.childName} remembering their best memory: ${childData.bestMemory}`,
+                    `${childData.childName} embarking on an adventure, full of courage and love for ${childData.favoriteActivity}`,
+                    `${childData.childName} meeting friendly creatures who also love ${childData.favoriteFood}`,
+                    `${childData.childName} learning to share and care for others`,
+                    `${childData.childName} showing everyone how fun it is to ${childData.favoriteActivity} together`,
+                    `${childData.childName} becoming known as the kindest and bravest of all`,
+                    `${childData.childName} returning home full of joy and new friends`,
+                    `${childData.childName} living happily ever after, always ready for new adventures`
+                ];
+                
+                return {
+                    page: pageNumber,
+                    text: text,
+                    imagePrompt: pageSpecificPrompts[index] || `${childData.childName} in a magical adventure scene`
+                };
+            })
         }
     };
 }
@@ -618,8 +635,15 @@ function showMockStory(story, uploadedFiles, childData) {
         }
     };
     
-    // Simple display function
-    showCurrentPage();
+    // Simple display function  
+    showCurrentPage().catch(error => {
+        console.error('Error displaying first page:', error);
+        // Fallback to basic display
+        const mainContent = document.querySelector('.main-content');
+        if (mainContent) {
+            mainContent.innerHTML = '<div style="text-align: center; padding: 2rem;"><p>Laddar berättelse...</p></div>';
+        }
+    });
 }
 
 // Order story function
@@ -639,8 +663,101 @@ function createNewStory() {
     showStoryModal();
 }
 
+// Generate personalized AI image for a story page
+async function generatePersonalizedImage(page, pageNumber, story) {
+    try {
+        const characteristics = story?.childCharacteristics || {};
+        const childName = story?.childName || 'a child';
+        
+        // Map characteristics for prompt
+        const genderMap = {
+            'pojke': 'boy',
+            'flicka': 'girl', 
+            'annat': 'child'
+        };
+        
+        const hairColorMap = {
+            'blont': 'blonde hair',
+            'brunt': 'brown hair',
+            'svart': 'black hair',
+            'rött': 'red hair',
+            'ljusbrunt': 'light brown hair',
+            'mörkt': 'dark hair'
+        };
+        
+        const favoriteColorMap = {
+            'röd': 'red',
+            'blå': 'blue', 
+            'grön': 'green',
+            'gul': 'yellow',
+            'rosa': 'pink',
+            'lila': 'purple',
+            'orange': 'orange'
+        };
+        
+        const gender = genderMap[characteristics.gender] || 'child';
+        const hairColor = hairColorMap[characteristics.hairColor] || 'hair';
+        const favoriteColor = favoriteColorMap[characteristics.favoriteColor] || 'colorful';
+        const favoriteFood = characteristics.favoriteFood || 'food';
+        const favoriteActivity = characteristics.favoriteActivity || 'playing';
+        
+        // Use the specific page image prompt from the story data if available
+        const pageImagePrompt = page?.imagePrompt || `${childName} in a magical adventure scene`;
+        
+        // Create personalized prompt based on page content and user characteristics  
+        const basePrompt = `A beautiful children's book illustration in watercolor style showing a happy ${gender} with ${hairColor}`;
+        const personalizedPrompt = `${basePrompt}, wearing ${favoriteColor} clothes. Scene: ${pageImagePrompt}. Whimsical, friendly, bright colors, safe for children, professional children's book art style, magical atmosphere.`;
+        
+        console.log('Generating image with prompt:', personalizedPrompt);
+        
+        // Try to generate with AI service
+        const imageUrl = await generateAIImage(personalizedPrompt, pageNumber, childName);
+        return imageUrl;
+        
+    } catch (error) {
+        console.error('Error generating personalized image:', error);
+        // Fallback to a simple placeholder
+        return `https://via.placeholder.com/400x300/8B4513/FFFFFF?text=Story+Page+${pageNumber}`;
+    }
+}
+
+// Generate AI image using various services
+async function generateAIImage(prompt, pageNumber, childName) {
+    // Try multiple image generation services in order of preference
+    
+    // 1. Try Pollinations AI (free and reliable)
+    try {
+        const pollinationsUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?width=400&height=300&seed=${pageNumber}&model=flux`;
+        console.log('Trying Pollinations AI for page', pageNumber);
+        
+        // Test if the service is available
+        const testResponse = await fetch(pollinationsUrl, { method: 'HEAD' });
+        if (testResponse.ok) {
+            return pollinationsUrl;
+        }
+    } catch (error) {
+        console.log('Pollinations AI not available:', error.message);
+    }
+    
+    // 2. Fallback to personalized placeholder with user's favorite color
+    const characteristics = window.currentStory?.childCharacteristics || {};
+    const favoriteColors = {
+        'röd': 'FF6B6B',
+        'blå': '4ECDC4', 
+        'grön': '45B7D1',
+        'gul': 'FFA07A',
+        'rosa': 'FF91A4',
+        'lila': '9B59B6',
+        'orange': 'F39C12'
+    };
+    
+    const userFavoriteColor = characteristics.favoriteColor || 'blå';
+    const colorCode = favoriteColors[userFavoriteColor] || '8B4513';
+    return `https://via.placeholder.com/400x300/${colorCode}/FFFFFF?text=${encodeURIComponent(childName + ' - Sida ' + pageNumber)}`;
+}
+
 // BULLETPROOF SIMPLE PAGE DISPLAY - NO ERRORS
-function showCurrentPage() {
+async function showCurrentPage() {
     console.log('showCurrentPage called, index:', window.currentPageIndex);
     
     try {
@@ -676,16 +793,10 @@ function showCurrentPage() {
             }
         }
         
-        // If no user drawing, use working image with page variation
+        // If no user drawing, generate personalized AI image
         if (!imageUrl) {
-            // Test accessing user data safely
-            const childName = window.currentStory?.childName || 'unknown';
-            
-            // Keep working image system
-            const imageTypes = ['jpeg', 'png', 'webp'];
-            const imageType = imageTypes[pageNum % 3];
-            imageUrl = `https://httpbin.org/image/${imageType}`;
-            console.log('Using working image type', imageType, 'for page', pageNum, 'child:', childName);
+            imageUrl = await generatePersonalizedImage(page, pageNum, window.currentStory);
+            console.log('Generated personalized AI image for page', pageNum);
         }
     
         const html = `
@@ -759,13 +870,13 @@ function showCurrentPage() {
 }
 
 // BULLETPROOF SIMPLE NAVIGATION - NO MORE ERRORS
-window.goToNextPage = function() {
+window.goToNextPage = async function() {
     console.log('NEXT button clicked, current page:', window.currentPageIndex);
     try {
         if (window.currentPageIndex < window.storyPages.length - 1) {
             window.currentPageIndex++;
             console.log('Moving to page:', window.currentPageIndex + 1);
-            showCurrentPage();
+            await showCurrentPage();
         }
     } catch (e) {
         console.error('Next page error:', e);
@@ -773,13 +884,13 @@ window.goToNextPage = function() {
     }
 }
 
-window.goToPrevPage = function() {
+window.goToPrevPage = async function() {
     console.log('PREV button clicked, current page:', window.currentPageIndex);
     try {
         if (window.currentPageIndex > 0) {
             window.currentPageIndex--;
             console.log('Moving to page:', window.currentPageIndex + 1);
-            showCurrentPage();
+            await showCurrentPage();
         }
     } catch (e) {
         console.error('Previous page error:', e);
