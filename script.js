@@ -636,12 +636,15 @@ function showMockStory(story, uploadedFiles, childData) {
     };
     
     // Simple display function  
+    console.log('Starting story display with', window.storyPages?.length, 'pages');
+    console.log('Current story data:', window.currentStory);
+    
     showCurrentPage().catch(error => {
         console.error('Error displaying first page:', error);
         // Fallback to basic display
         const mainContent = document.querySelector('.main-content');
         if (mainContent) {
-            mainContent.innerHTML = '<div style="text-align: center; padding: 2rem;"><p>Laddar berättelse...</p></div>';
+            mainContent.innerHTML = '<div style="text-align: center; padding: 2rem;"><p>Laddar berättelse...</p><button onclick="window.location.reload()">Ladda om</button></div>';
         }
     });
 }
@@ -712,6 +715,12 @@ async function generatePersonalizedImage(page, pageNumber, story) {
         
         // Try to generate with AI service
         const imageUrl = await generateAIImage(personalizedPrompt, pageNumber, childName);
+        
+        // Verify we got a valid URL
+        if (!imageUrl || imageUrl.length < 10) {
+            throw new Error('Invalid image URL received');
+        }
+        
         return imageUrl;
         
     } catch (error) {
@@ -723,23 +732,30 @@ async function generatePersonalizedImage(page, pageNumber, story) {
 
 // Generate AI image using various services
 async function generateAIImage(prompt, pageNumber, childName) {
+    console.log(`Generating AI image for page ${pageNumber}, child: ${childName}`);
+    console.log('Prompt:', prompt.substring(0, 100) + '...');
+    
     // Try multiple image generation services in order of preference
     
-    // 1. Try Pollinations AI (free and reliable)
+    // 1. Try Pollinations AI (free and reliable) - don't test with HEAD, just use the URL
     try {
         const pollinationsUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?width=400&height=300&seed=${pageNumber}&model=flux`;
-        console.log('Trying Pollinations AI for page', pageNumber);
-        
-        // Test if the service is available
-        const testResponse = await fetch(pollinationsUrl, { method: 'HEAD' });
-        if (testResponse.ok) {
-            return pollinationsUrl;
-        }
+        console.log('✅ Generated Pollinations AI URL for page', pageNumber);
+        return pollinationsUrl;
     } catch (error) {
-        console.log('Pollinations AI not available:', error.message);
+        console.log('❌ Error creating Pollinations URL:', error.message);
     }
     
-    // 2. Fallback to personalized placeholder with user's favorite color
+    // 2. Try alternative AI service  
+    try {
+        const alternativeUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?width=400&height=300&seed=${pageNumber * 42}`;
+        console.log('✅ Using alternative Pollinations seed for page', pageNumber);
+        return alternativeUrl;
+    } catch (error) {
+        console.log('❌ Alternative AI service failed:', error.message);
+    }
+    
+    // 3. Fallback to personalized placeholder with user's favorite color
     const characteristics = window.currentStory?.childCharacteristics || {};
     const favoriteColors = {
         'röd': 'FF6B6B',
@@ -753,7 +769,10 @@ async function generateAIImage(prompt, pageNumber, childName) {
     
     const userFavoriteColor = characteristics.favoriteColor || 'blå';
     const colorCode = favoriteColors[userFavoriteColor] || '8B4513';
-    return `https://via.placeholder.com/400x300/${colorCode}/FFFFFF?text=${encodeURIComponent(childName + ' - Sida ' + pageNumber)}`;
+    const fallbackUrl = `https://via.placeholder.com/400x300/${colorCode}/FFFFFF?text=${encodeURIComponent(childName + ' - Sida ' + pageNumber)}`;
+    
+    console.log('⚠️ Using fallback placeholder for page', pageNumber, 'with color', userFavoriteColor);
+    return fallbackUrl;
 }
 
 // BULLETPROOF SIMPLE PAGE DISPLAY - NO ERRORS
@@ -795,8 +814,14 @@ async function showCurrentPage() {
         
         // If no user drawing, generate personalized AI image
         if (!imageUrl) {
-            imageUrl = await generatePersonalizedImage(page, pageNum, window.currentStory);
-            console.log('Generated personalized AI image for page', pageNum);
+            try {
+                imageUrl = await generatePersonalizedImage(page, pageNum, window.currentStory);
+                console.log('Generated personalized AI image for page', pageNum, ':', imageUrl);
+            } catch (imgError) {
+                console.error('Error generating personalized image:', imgError);
+                // Ultimate fallback
+                imageUrl = `https://via.placeholder.com/400x300/8B4513/FFFFFF?text=Sida+${pageNum}`;
+            }
         }
     
         const html = `
@@ -869,32 +894,60 @@ async function showCurrentPage() {
     }
 }
 
-// BULLETPROOF SIMPLE NAVIGATION - NO MORE ERRORS
+// FIXED NAVIGATION - NO MORE RACE CONDITIONS
+let isNavigating = false;
+
 window.goToNextPage = async function() {
+    if (isNavigating) {
+        console.log('Navigation in progress, ignoring click');
+        return;
+    }
+    
     console.log('NEXT button clicked, current page:', window.currentPageIndex);
+    
+    if (!window.storyPages || window.currentPageIndex >= window.storyPages.length - 1) {
+        console.log('Already at last page or no story pages');
+        return;
+    }
+    
     try {
-        if (window.currentPageIndex < window.storyPages.length - 1) {
-            window.currentPageIndex++;
-            console.log('Moving to page:', window.currentPageIndex + 1);
-            await showCurrentPage();
-        }
+        isNavigating = true;
+        window.currentPageIndex++;
+        console.log('Moving to page:', window.currentPageIndex + 1);
+        await showCurrentPage();
     } catch (e) {
         console.error('Next page error:', e);
-        console.log('Navigation had minor issues but continuing...');
+        // Revert on error
+        window.currentPageIndex--;
+    } finally {
+        isNavigating = false;
     }
 }
 
 window.goToPrevPage = async function() {
+    if (isNavigating) {
+        console.log('Navigation in progress, ignoring click');
+        return;
+    }
+    
     console.log('PREV button clicked, current page:', window.currentPageIndex);
+    
+    if (window.currentPageIndex <= 0) {
+        console.log('Already at first page');
+        return;
+    }
+    
     try {
-        if (window.currentPageIndex > 0) {
-            window.currentPageIndex--;
-            console.log('Moving to page:', window.currentPageIndex + 1);
-            await showCurrentPage();
-        }
+        isNavigating = true;
+        window.currentPageIndex--;
+        console.log('Moving to page:', window.currentPageIndex + 1);
+        await showCurrentPage();
     } catch (e) {
         console.error('Previous page error:', e);
-        console.log('Navigation had minor issues but continuing...');
+        // Revert on error
+        window.currentPageIndex++;
+    } finally {
+        isNavigating = false;
     }
 }
 
