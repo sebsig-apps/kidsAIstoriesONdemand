@@ -84,6 +84,7 @@ window.onclick = function(event) {
     const signupModal = document.getElementById('signupModal');
     const storyModal = document.getElementById('storyModal');
     const bookOrderModal = document.getElementById('bookOrderModal');
+    const stripePaymentModal = document.getElementById('stripePaymentModal');
     
     if (event.target == loginModal) {
         loginModal.style.display = 'none';
@@ -96,6 +97,9 @@ window.onclick = function(event) {
     }
     if (event.target == bookOrderModal) {
         bookOrderModal.style.display = 'none';
+    }
+    if (event.target == stripePaymentModal) {
+        stripePaymentModal.style.display = 'none';
     }
 }
 
@@ -672,6 +676,331 @@ function hideBookOrderModal() {
 // Demo mode flag - set to true for testing, false for production
 const DEMO_MODE = true;
 
+// 🔒 STRIPE TEST MODE - 100% SAFE - NO REAL PAYMENTS POSSIBLE
+// This is a demo publishable key that only works with test cards
+const STRIPE_TEST_KEY = 'pk_test_51234567890abcdefghijklmnopqrstuvwxyz'; // Demo key for testing
+let stripe = null;
+let elements = null;
+let cardElement = null;
+
+// Initialize Stripe when page loads
+window.addEventListener('load', initializeStripe);
+
+// 🔒 INITIALIZE STRIPE TEST MODE
+function initializeStripe() {
+    try {
+        // For demo purposes, we'll use Stripe's test mode
+        // In real implementation, you'd use: stripe = Stripe('pk_test_your_real_key');
+        console.log('🔒 Initializing Stripe in TEST MODE - No real payments possible');
+        
+        // Mock Stripe initialization for demo
+        window.stripeInitialized = true;
+        console.log('✅ Stripe test mode initialized successfully');
+    } catch (error) {
+        console.error('❌ Stripe initialization failed:', error);
+    }
+}
+
+// Show Stripe payment modal
+function showPaymentModal(bookOption) {
+    const modal = document.getElementById('stripePaymentModal');
+    
+    // Update payment info
+    document.getElementById('payment-book-title').textContent = bookOption.name;
+    document.getElementById('payment-book-details').textContent = bookOption.size + ' • ' + bookOption.pages;
+    document.getElementById('payment-story-info').textContent = `"${window.currentStory?.title || 'Magisk Berättelse'}" för ${window.currentStory?.childName || 'ditt barn'}`;
+    document.getElementById('payment-book-price').textContent = bookOption.price + '€';
+    document.getElementById('payment-shipping').textContent = bookOption.shipping + '€';
+    document.getElementById('payment-total').textContent = bookOption.total + '€';
+    document.getElementById('button-price').textContent = bookOption.total + '€';
+    
+    // Store current order
+    window.currentOrder = bookOption;
+    
+    // Show modal
+    modal.style.display = 'block';
+    
+    // Initialize Stripe Elements for the card form
+    initializeStripeElements();
+}
+
+// Hide payment modal
+function hidePaymentModal() {
+    document.getElementById('stripePaymentModal').style.display = 'none';
+}
+
+// Initialize Stripe Elements
+function initializeStripeElements() {
+    console.log('🔒 Setting up Stripe Elements (Demo Mode)');
+    
+    // For demo, we'll create a visual representation
+    const cardElement = document.getElementById('card-element');
+    if (!cardElement.hasChildNodes()) {
+        cardElement.innerHTML = `
+            <div class="demo-card-element">
+                <div class="card-input-row">
+                    <input type="text" placeholder="1234 1234 1234 1234" maxlength="19" class="demo-card-input" id="demo-card-number">
+                    <input type="text" placeholder="MM/YY" maxlength="5" class="demo-card-input small" id="demo-card-expiry">
+                    <input type="text" placeholder="CVC" maxlength="4" class="demo-card-input small" id="demo-card-cvc">
+                </div>
+                <div class="demo-note">🧪 Detta är en demo - inga riktiga kortuppgifter behövs</div>
+            </div>
+        `;
+        
+        // Add demo card number formatting
+        const cardNumberInput = document.getElementById('demo-card-number');
+        cardNumberInput.addEventListener('input', formatCardNumber);
+        
+        const expiryInput = document.getElementById('demo-card-expiry');
+        expiryInput.addEventListener('input', formatExpiry);
+    }
+    
+    // Set up form submission
+    const form = document.getElementById('payment-form');
+    form.addEventListener('submit', handlePaymentSubmit);
+}
+
+// Format card number input (demo)
+function formatCardNumber(event) {
+    let value = event.target.value.replace(/\s+/g, '').replace(/[^0-9]/gi, '');
+    let formattedValue = value.match(/.{1,4}/g)?.join(' ') || value;
+    event.target.value = formattedValue;
+}
+
+// Format expiry input (demo)
+function formatExpiry(event) {
+    let value = event.target.value.replace(/\D/g, '');
+    if (value.length >= 2) {
+        value = value.substring(0, 2) + '/' + value.substring(2, 4);
+    }
+    event.target.value = value;
+}
+
+// Handle payment form submission
+async function handlePaymentSubmit(event) {
+    event.preventDefault();
+    
+    const submitButton = document.getElementById('submit-payment');
+    const buttonText = document.getElementById('button-text');
+    const spinner = document.getElementById('payment-spinner');
+    
+    // Show loading state
+    submitButton.disabled = true;
+    buttonText.style.display = 'none';
+    spinner.classList.remove('hidden');
+    
+    try {
+        console.log('🔒 Processing payment in TEST MODE...');
+        
+        // Get form data
+        const formData = getPaymentFormData();
+        
+        // Validate test card
+        const cardNumber = document.getElementById('demo-card-number').value.replace(/\s/g, '');
+        const paymentResult = simulateStripePayment(cardNumber, formData);
+        
+        // Simulate processing delay
+        await new Promise(resolve => setTimeout(resolve, 2000));
+        
+        if (paymentResult.success) {
+            showPaymentSuccess(paymentResult);
+        } else {
+            showPaymentError(paymentResult.error);
+        }
+        
+    } catch (error) {
+        console.error('Payment processing error:', error);
+        showPaymentError('Ett oväntat fel uppstod. Försök igen.');
+    } finally {
+        // Reset button state
+        submitButton.disabled = false;
+        buttonText.style.display = 'inline';
+        spinner.classList.add('hidden');
+    }
+}
+
+// Get payment form data
+function getPaymentFormData() {
+    return {
+        email: document.getElementById('customer-email').value,
+        name: document.getElementById('customer-name').value,
+        cardNumber: document.getElementById('demo-card-number').value,
+        expiry: document.getElementById('demo-card-expiry').value,
+        cvc: document.getElementById('demo-card-cvc').value,
+        shipping: {
+            name: document.getElementById('shipping-name').value,
+            address: document.getElementById('shipping-address').value,
+            city: document.getElementById('shipping-city').value,
+            postal: document.getElementById('shipping-postal').value,
+            country: document.getElementById('shipping-country').value
+        }
+    };
+}
+
+// Simulate Stripe payment processing
+function simulateStripePayment(cardNumber, formData) {
+    console.log('🧪 Simulating Stripe payment with test card:', cardNumber);
+    
+    // Test card numbers and their outcomes
+    const testCards = {
+        '4242424242424242': { success: true, message: 'Payment succeeded' },
+        '4000000000000002': { success: false, error: 'Your card was declined.' },
+        '4000000000009995': { success: false, error: 'Your card has insufficient funds.' },
+        '4000000000000119': { success: false, error: 'Your card was declined.' },
+        '4000002760003184': { success: true, message: 'Payment succeeded (3D Secure)' }
+    };
+    
+    // Check if it's a known test card
+    if (testCards[cardNumber]) {
+        if (testCards[cardNumber].success) {
+            return {
+                success: true,
+                paymentIntentId: 'pi_test_' + Date.now(),
+                amount: window.currentOrder.total * 100, // in cents
+                currency: 'eur',
+                customer: formData
+            };
+        } else {
+            return {
+                success: false,
+                error: testCards[cardNumber].error
+            };
+        }
+    } else {
+        // Unknown card number
+        return {
+            success: false,
+            error: 'Invalid card number. Use test cards: 4242 4242 4242 4242'
+        };
+    }
+}
+
+// Show payment success
+function showPaymentSuccess(paymentResult) {
+    console.log('✅ Payment successful (TEST MODE):', paymentResult);
+    
+    const successHTML = `
+        <div class="payment-success">
+            <div class="success-icon">🎉</div>
+            <h2>Betalning Genomförd!</h2>
+            <div class="payment-details">
+                <p><strong>Betalnings-ID:</strong> ${paymentResult.paymentIntentId}</p>
+                <p><strong>Belopp:</strong> ${(paymentResult.amount / 100).toFixed(2)}€</p>
+                <p><strong>Status:</strong> Betald (Test Mode)</p>
+            </div>
+            
+            <div class="next-steps">
+                <h3>Nästa steg:</h3>
+                <div class="step">✅ Betalning mottagen</div>
+                <div class="step">📄 PDF genereras från din berättelse</div>
+                <div class="step">📦 Skickas till Printful för tryck</div>
+                <div class="step">🚚 Levereras till din adress (7-12 dagar)</div>
+            </div>
+            
+            <div class="test-mode-notice">
+                <p>🧪 <strong>Test Mode:</strong> Detta var en testbetalning. Inga riktiga pengar har debiterats.</p>
+            </div>
+            
+            <div class="success-actions">
+                <button onclick="simulatePrintfulOrder()" class="primary-button">
+                    📦 Simulera Printful Beställning
+                </button>
+                <button onclick="hidePaymentModal(); hideBookOrderModal();" class="secondary-button">
+                    Stäng
+                </button>
+            </div>
+        </div>
+    `;
+    
+    document.getElementById('paymentContainer').innerHTML = successHTML;
+}
+
+// Show payment error
+function showPaymentError(errorMessage) {
+    console.log('❌ Payment failed (TEST MODE):', errorMessage);
+    
+    const errorElement = document.getElementById('card-errors');
+    errorElement.textContent = errorMessage;
+    errorElement.style.display = 'block';
+    
+    // Auto-hide error after 5 seconds
+    setTimeout(() => {
+        errorElement.style.display = 'none';
+        errorElement.textContent = '';
+    }, 5000);
+}
+
+// Switch payment tabs
+function switchPaymentTab(tab) {
+    // Update tab buttons
+    const tabs = document.querySelectorAll('.payment-tab');
+    tabs.forEach(t => t.classList.remove('active'));
+    event.target.classList.add('active');
+    
+    // Update form visibility
+    const forms = document.querySelectorAll('.payment-method-form');
+    forms.forEach(f => f.classList.remove('active'));
+    document.getElementById(tab === 'card' ? 'card-payment' : tab).classList.add('active');
+    
+    if (tab === 'apple-pay') {
+        showApplePayDemo();
+    } else if (tab === 'google-pay') {
+        showGooglePayDemo();
+    }
+}
+
+// Show Apple Pay demo
+function showApplePayDemo() {
+    const container = document.getElementById('apple-pay-button');
+    container.innerHTML = `
+        <div class="demo-payment-button apple-pay-demo" onclick="simulateApplePay()">
+            <span class="apple-pay-logo">🍎</span>
+            <span>Betala med Apple Pay</span>
+        </div>
+        <p class="demo-note">🧪 Demo - Simulerar Apple Pay betalning</p>
+    `;
+}
+
+// Show Google Pay demo
+function showGooglePayDemo() {
+    const container = document.getElementById('google-pay-button');
+    container.innerHTML = `
+        <div class="demo-payment-button google-pay-demo" onclick="simulateGooglePay()">
+            <span class="google-pay-logo">📱</span>
+            <span>Betala med Google Pay</span>
+        </div>
+        <p class="demo-note">🧪 Demo - Simulerar Google Pay betalning</p>
+    `;
+}
+
+// Simulate Apple Pay
+function simulateApplePay() {
+    console.log('🍎 Simulating Apple Pay...');
+    showPaymentSuccess({
+        success: true,
+        paymentIntentId: 'pi_applepay_test_' + Date.now(),
+        amount: window.currentOrder.total * 100,
+        currency: 'eur'
+    });
+}
+
+// Simulate Google Pay
+function simulateGooglePay() {
+    console.log('📱 Simulating Google Pay...');
+    showPaymentSuccess({
+        success: true,
+        paymentIntentId: 'pi_googlepay_test_' + Date.now(),
+        amount: window.currentOrder.total * 100,
+        currency: 'eur'
+    });
+}
+
+// Simulate Printful order creation
+function simulatePrintfulOrder() {
+    console.log('📦 Simulating Printful order creation...');
+    alert('🧪 TEST MODE: Skulle nu skapa PDF från berättelsen och skicka till Printful för tryck!\n\nI produktionsläge skulle:\n1. PDF genereras från dina 10 sidor\n2. Skickas till Printful\n3. Bok trycks och skickas till kunden');
+}
+
 // Load Printful product options with real product images
 function loadPrintfulOptions() {
     const bookOptions = [
@@ -815,12 +1144,42 @@ function renderBookOptions(options) {
 
 // Select a book option
 function selectBookOption(optionId, total) {
-    if (DEMO_MODE) {
-        showDemoOrderConfirmation(optionId, total);
-    } else {
-        // Real order processing would go here
-        processRealOrder(optionId, total);
-    }
+    // Find the selected book option
+    const bookOptions = [
+        {
+            id: 'hardcover-8x8',
+            name: 'Premium Hardcover',
+            size: '8" × 8" Square',
+            pages: '10 pages',
+            price: 18.99,
+            shipping: 8.50,
+            total: 27.49
+        },
+        {
+            id: 'softcover-8x8',
+            name: 'Quality Softcover',
+            size: '8" × 8" Square', 
+            pages: '10 pages',
+            price: 12.99,
+            shipping: 8.50,
+            total: 21.49
+        },
+        {
+            id: 'magazine-a4',
+            name: 'Magazine Style',
+            size: 'A4 Portrait',
+            pages: '10 pages',
+            price: 8.99,
+            shipping: 6.50,
+            total: 15.49
+        }
+    ];
+    
+    const selectedBook = bookOptions.find(book => book.id === optionId);
+    if (!selectedBook) return;
+    
+    // Show Stripe payment modal
+    showPaymentModal(selectedBook);
 }
 
 // Show demo order confirmation
