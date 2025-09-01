@@ -1445,7 +1445,11 @@ async function generatePersonalizedImage(page, pageNumber, story) {
             'svart': 'black hair',
             'rött': 'red hair',
             'ljusbrunt': 'light brown hair',
-            'mörkt': 'dark hair'
+            'mörkt': 'dark hair',
+            'ljust': 'light hair',
+            'mörkt': 'dark hair',
+            'grått': 'gray hair',
+            'färgat': 'colorful hair'
         };
         
         const favoriteColorMap = {
@@ -1455,7 +1459,11 @@ async function generatePersonalizedImage(page, pageNumber, story) {
             'gul': 'yellow',
             'rosa': 'pink',
             'lila': 'purple',
-            'orange': 'orange'
+            'orange': 'orange',
+            'turkos': 'turquoise',
+            'vit': 'white',
+            'svart': 'black',
+            'rainbow': 'rainbow'
         };
         
         const gender = genderMap[characteristics.gender] || 'child';
@@ -1464,14 +1472,53 @@ async function generatePersonalizedImage(page, pageNumber, story) {
         const favoriteFood = characteristics.favoriteFood || 'food';
         const favoriteActivity = characteristics.favoriteActivity || 'playing';
         
-        // Use the specific page image prompt from the story data if available
-        const pageImagePrompt = page?.imagePrompt || `${childName} in a magical adventure scene`;
+        // Extract and translate story context from the Swedish text
+        const storyText = page?.text || '';
+        let sceneDescription = '';
         
-        // Create personalized prompt based on page content and user characteristics  
+        // Analyze the Swedish story text to create English scene descriptions
+        if (storyText.includes('upptäckte') || storyText.includes('fantastiskt')) {
+            sceneDescription = 'discovering something magical and wonderful';
+        } else if (storyText.includes('favorit') && storyText.includes('mat')) {
+            sceneDescription = `enjoying delicious ${favoriteFood} in a magical setting`;
+        } else if (storyText.includes('minnet') || storyText.includes('mindes')) {
+            sceneDescription = 'remembering beautiful memories in a dreamy landscape';
+        } else if (storyText.includes('äventyr') || storyText.includes('begav')) {
+            sceneDescription = 'embarking on an exciting adventure through magical lands';
+        } else if (storyText.includes('mötte') || storyText.includes('vänliga')) {
+            sceneDescription = 'meeting friendly magical creatures in an enchanted forest';
+        } else if (storyText.includes('dela') || storyText.includes('tillsammans')) {
+            sceneDescription = 'sharing and playing together with friends in a joyful scene';
+        } else if (storyText.includes('roligt') || storyText.includes('tillsammans')) {
+            sceneDescription = `having fun ${favoriteActivity} with friends in a magical playground`;
+        } else if (storyText.includes('känd') || storyText.includes('modigaste')) {
+            sceneDescription = 'being celebrated as a hero in a festive magical celebration';
+        } else if (storyText.includes('hem') || storyText.includes('glädje')) {
+            sceneDescription = 'returning home happily with new friends in a sunset scene';
+        } else if (storyText.includes('lyckligt') || storyText.includes('nya äventyr')) {
+            sceneDescription = 'living happily in a magical world full of future adventures';
+        } else {
+            // Fallback based on page number
+            const pageScenes = [
+                'discovering their inner hero in a magical forest',
+                `enjoying magical ${favoriteFood} under a rainbow`,
+                'surrounded by beautiful memories coming to life',
+                'starting an adventure through enchanted lands',
+                'meeting friendly magical creatures',
+                'learning to share in a circle of friendship',
+                `leading others in fun ${favoriteActivity} activities`,
+                'being celebrated as a brave hero',
+                'returning home with magical friends',
+                'ready for new adventures under starry skies'
+            ];
+            sceneDescription = pageScenes[pageNumber - 1] || 'in a magical adventure scene';
+        }
+        
+        // Create personalized prompt based on story content and user characteristics
         const basePrompt = `A beautiful children's book illustration in watercolor style showing a happy ${gender} with ${hairColor}`;
-        const personalizedPrompt = `${basePrompt}, wearing ${favoriteColor} clothes. Scene: ${pageImagePrompt}. Whimsical, friendly, bright colors, safe for children, professional children's book art style, magical atmosphere.`;
+        const personalizedPrompt = `${basePrompt}, wearing ${favoriteColor} clothes, ${sceneDescription}. Whimsical, friendly, bright colors, safe for children, professional children's book art style, magical atmosphere, no text, no words, no letters in the image.`;
         
-        console.log('Generating image with prompt:', personalizedPrompt);
+        console.log('Generating image with story-based prompt:', personalizedPrompt);
         
         // Try to generate with AI service
         const imageUrl = await generateAIImage(personalizedPrompt, pageNumber, childName);
