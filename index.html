@@ -232,92 +232,75 @@
         <div class="modal-content stripe-payment-modal">
             <span class="close" onclick="hidePaymentModal()">&times;</span>
             <div id="paymentContainer">
-                <div class="payment-header">
-                    <h2>💳 Betala för din bok</h2>
-                    <div class="payment-security">
-                        <span class="security-icon">🔒</span>
-                        <span>Säker betalning med Stripe</span>
-                    </div>
-                </div>
-
-                <div class="order-summary-payment">
-                    <div class="book-info">
-                        <h3 id="payment-book-title">Premium Hardcover</h3>
-                        <p id="payment-book-details">8" × 8" Square • 10 pages</p>
-                        <p id="payment-story-info">"Magisk Berättelse" för ditt barn</p>
-                    </div>
-                    <div class="price-summary">
-                        <div class="price-line">
-                            <span>Bok:</span>
-                            <span id="payment-book-price">18.99€</span>
-                        </div>
-                        <div class="price-line">
-                            <span>Frakt till Sverige:</span>
-                            <span id="payment-shipping">8.50€</span>
-                        </div>
-                        <div class="price-line total-price">
-                            <span><strong>Totalt:</strong></span>
-                            <span id="payment-total"><strong>27.49€</strong></span>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="payment-form-section">
-                    <div class="payment-left-column">
-                        <div class="payment-methods-tabs">
-                            <button class="payment-tab active" onclick="switchPaymentTab('card')">
-                                💳 Kort
-                            </button>
-                            <button class="payment-tab" onclick="switchPaymentTab('apple-pay')">
-                                🍎 Apple Pay
-                            </button>
-                            <button class="payment-tab" onclick="switchPaymentTab('google-pay')">
-                                📱 Google Pay
-                            </button>
-                        </div>
-                    </div>
-
-                    <div class="payment-right-column">
-                        <!-- Card Payment Form -->
-                        <div id="card-payment" class="payment-method-form active">
-                        <form id="payment-form">
-                            <div class="form-group">
-                                <label for="customer-email">E-postadress *</label>
-                                <input type="email" id="customer-email" placeholder="din@email.com" required>
+                <!-- Two-column layout inspired by modern checkout designs -->
+                <div class="checkout-container">
+                    <!-- Left Column: Product Info -->
+                    <div class="product-summary-column">
+                        <div class="product-showcase">
+                            <div class="product-image-container">
+                                <img src="https://via.placeholder.com/200x200/8B4513/FFFFFF?text=Din+Bok" alt="Din personliga bok" class="product-image">
                             </div>
+                            <div class="product-details">
+                                <h2 id="payment-book-title" class="product-title">Premium Hardcover</h2>
+                                <p id="payment-book-details" class="product-specs">8" × 8" Square • 10 pages</p>
+                                <p id="payment-story-info" class="story-title">"Magisk Berättelse" för ditt barn</p>
+                            </div>
+                        </div>
+                        
+                        <div class="order-total">
+                            <div class="price-breakdown">
+                                <div class="price-item">
+                                    <span>Bok</span>
+                                    <span id="payment-book-price">18.99€</span>
+                                </div>
+                                <div class="price-item">
+                                    <span>Frakt</span>
+                                    <span id="payment-shipping">8.50€</span>
+                                </div>
+                                <div class="price-divider"></div>
+                                <div class="price-item total">
+                                    <span>Totalt</span>
+                                    <span id="payment-total">27.49€</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Right Column: Payment Form -->
+                    <div class="payment-form-column">
+                        <div class="payment-header">
+                            <h3>Betala för din beställning</h3>
+                            <div class="security-badges">
+                                <span class="security-badge">🔒 Säkert</span>
+                                <span class="powered-by">Powered by <strong>Stripe</strong></span>
+                            </div>
+                        </div>
+
+                        <!-- Payment Methods -->
+                        <div class="payment-methods">
+                            <!-- Apple Pay Button -->
+                            <button class="apple-pay-button" onclick="simulateApplePay()">
+                                <div class="apple-pay-logo">🍎</div>
+                                <span>Pay</span>
+                            </button>
                             
-                            <div class="form-row">
+                            <div class="divider-text">
+                                <span>Eller betala med kort</span>
+                            </div>
+
+                            <!-- Contact Info -->
+                            <div class="form-section">
+                                <h4 class="section-title">Kontaktinformation</h4>
                                 <div class="form-group">
-                                    <label for="customer-name">Namn *</label>
-                                    <input type="text" id="customer-name" placeholder="Ditt namn" required>
+                                    <input type="email" id="customer-email" placeholder="E-postadress" required>
                                 </div>
                             </div>
 
-                            <div class="form-group">
-                                <label for="card-element">Kortinformation *</label>
-                                <div id="card-element" class="stripe-element">
-                                    <!-- Stripe Elements will create form elements here -->
-                                </div>
-                                <div id="card-errors" class="card-errors" role="alert"></div>
-                            </div>
-
-                            <div class="shipping-section">
-                                <h4>Leveransadress</h4>
-                                <div class="form-row">
-                                    <div class="form-group half">
-                                        <input type="text" id="shipping-name" placeholder="Mottagarens namn" required>
-                                    </div>
-                                    <div class="form-group half">
-                                        <input type="text" id="shipping-address" placeholder="Gatuadress" required>
-                                    </div>
-                                </div>
-                                <div class="form-row">
-                                    <div class="form-group half">
-                                        <input type="text" id="shipping-city" placeholder="Stad" required>
-                                    </div>
-                                    <div class="form-group half">
-                                        <input type="text" id="shipping-postal" placeholder="Postnummer" required>
-                                    </div>
+                            <!-- Shipping Info -->
+                            <div class="form-section">
+                                <h4 class="section-title">Leveransadress</h4>
+                                <div class="form-group">
+                                    <input type="text" id="shipping-name" placeholder="Namn" required>
                                 </div>
                                 <div class="form-group">
                                     <select id="shipping-country" required>
@@ -327,43 +310,79 @@
                                         <option value="FI">Finland</option>
                                     </select>
                                 </div>
-                            </div>
-
-                            <div class="test-cards-info">
-                                <h4>🧪 Test Mode - Använd dessa testkort:</h4>
-                                <div class="test-card-list">
-                                    <div class="test-card">
-                                        <strong>✅ Framgångsrikt:</strong> 4242 4242 4242 4242
+                                <div class="form-row">
+                                    <div class="form-group half">
+                                        <input type="text" id="shipping-address" placeholder="Adress" required>
                                     </div>
-                                    <div class="test-card">
-                                        <strong>❌ Avvisad:</strong> 4000 0000 0000 0002
-                                    </div>
-                                    <div class="test-card">
-                                        <strong>🔐 3D Secure:</strong> 4000 0027 6000 3184
+                                    <div class="form-group half">
+                                        <input type="text" id="shipping-postal" placeholder="Postnummer" required>
                                     </div>
                                 </div>
-                                <p class="test-note">Använd vilken framtida månad/år och CVC som helst</p>
+                                <div class="form-group">
+                                    <input type="text" id="shipping-city" placeholder="Stad" required>
+                                </div>
                             </div>
 
-                            <button type="submit" id="submit-payment" class="payment-button">
-                                <span id="button-text">Betala nu - <span id="button-price">27.49€</span></span>
-                                <div id="payment-spinner" class="spinner hidden"></div>
-                            </button>
-                        </form>
-                        </div>
+                            <!-- Payment Method -->
+                            <div class="form-section">
+                                <h4 class="section-title">Betalsätt</h4>
+                                
+                                <!-- Payment Method Options -->
+                                <div class="payment-options">
+                                    <label class="payment-option active" data-method="card">
+                                        <input type="radio" name="payment-method" value="card" checked>
+                                        <div class="option-content">
+                                            <div class="option-icon">💳</div>
+                                            <span>Kort</span>
+                                        </div>
+                                    </label>
+                                    
+                                    <label class="payment-option" data-method="bank">
+                                        <input type="radio" name="payment-method" value="bank">
+                                        <div class="option-content">
+                                            <div class="option-icon">🏦</div>
+                                            <span>Bank</span>
+                                        </div>
+                                    </label>
+                                    
+                                    <label class="payment-option" data-method="klarna">
+                                        <input type="radio" name="payment-method" value="klarna">
+                                        <div class="option-content">
+                                            <div class="option-icon">🔷</div>
+                                            <span>Klarna</span>
+                                            <small>Köp nu, betala senare</small>
+                                        </div>
+                                    </label>
+                                </div>
 
-                        <!-- Apple Pay -->
-                        <div id="apple-pay" class="payment-method-form">
-                            <div id="apple-pay-button" class="apple-pay-button-container">
-                                <!-- Apple Pay button will be inserted here -->
+                                <!-- Card Details -->
+                                <div id="card-details" class="card-details-section">
+                                    <div class="form-group">
+                                        <div id="card-element" class="stripe-element">
+                                            <!-- Stripe Elements or demo form goes here -->
+                                        </div>
+                                        <div id="card-errors" class="card-errors" role="alert"></div>
+                                    </div>
+                                </div>
                             </div>
-                        </div>
 
-                        <!-- Google Pay -->
-                        <div id="google-pay" class="payment-method-form">
-                            <div id="google-pay-button" class="google-pay-button-container">
-                                <!-- Google Pay button will be inserted here -->
+                            <!-- Test Cards Info -->
+                            <div class="test-mode-notice">
+                                <h5>🧪 Test Mode</h5>
+                                <div class="test-cards">
+                                    <div class="test-card">✅ Godkänt: 4242 4242 4242 4242</div>
+                                    <div class="test-card">❌ Avvisat: 4000 0000 0000 0002</div>
+                                </div>
+                                <p>Använd vilken framtida månad/år och CVC som helst</p>
                             </div>
+
+                            <!-- Submit Button -->
+                            <form id="payment-form">
+                                <button type="submit" id="submit-payment" class="pay-now-button">
+                                    <span id="button-text">Slutför beställning - <span id="button-price">27.49€</span></span>
+                                    <div id="payment-spinner" class="spinner hidden"></div>
+                                </button>
+                            </form>
                         </div>
                     </div>
                 </div>

@@ -733,6 +733,9 @@ function hidePaymentModal() {
 function initializeStripeElements() {
     console.log('🔒 Setting up Stripe Elements (Demo Mode)');
     
+    // Initialize payment method selection
+    initializePaymentMethodSelection();
+    
     // For demo, we'll create a visual representation
     const cardElement = document.getElementById('card-element');
     if (!cardElement.hasChildNodes()) {
@@ -749,15 +752,58 @@ function initializeStripeElements() {
         
         // Add demo card number formatting
         const cardNumberInput = document.getElementById('demo-card-number');
-        cardNumberInput.addEventListener('input', formatCardNumber);
+        if (cardNumberInput) {
+            cardNumberInput.addEventListener('input', formatCardNumber);
+        }
         
         const expiryInput = document.getElementById('demo-card-expiry');
-        expiryInput.addEventListener('input', formatExpiry);
+        if (expiryInput) {
+            expiryInput.addEventListener('input', formatExpiry);
+        }
     }
     
     // Set up form submission
     const form = document.getElementById('payment-form');
-    form.addEventListener('submit', handlePaymentSubmit);
+    if (form) {
+        form.addEventListener('submit', handlePaymentSubmit);
+    }
+}
+
+// Initialize payment method selection handling
+function initializePaymentMethodSelection() {
+    const paymentOptions = document.querySelectorAll('.payment-option');
+    const cardDetails = document.getElementById('card-details');
+    
+    paymentOptions.forEach(option => {
+        option.addEventListener('click', function() {
+            // Remove active class from all options
+            paymentOptions.forEach(opt => opt.classList.remove('active'));
+            
+            // Add active class to clicked option
+            this.classList.add('active');
+            
+            // Check the radio button
+            const radio = this.querySelector('input[type="radio"]');
+            if (radio) {
+                radio.checked = true;
+            }
+            
+            // Show/hide card details based on selection
+            const method = radio ? radio.value : 'card';
+            if (method === 'card' && cardDetails) {
+                cardDetails.style.display = 'block';
+            } else if (cardDetails) {
+                cardDetails.style.display = 'none';
+            }
+            
+            // Handle other payment methods
+            if (method === 'bank') {
+                console.log('Bank payment selected - would integrate with bank payment provider');
+            } else if (method === 'klarna') {
+                console.log('Klarna selected - would integrate with Klarna SDK');
+            }
+        });
+    });
 }
 
 // Format card number input (demo)
